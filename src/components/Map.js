@@ -25,12 +25,10 @@ const MapComponent = () => {
   const handleMarkerClick = (e, location) => {
     e.originalEvent.stopPropagation();
     
-    // Calculate an upward offset to show the popup more centered in the viewport
-    const verticalOffset = 0.002; // Adjust this value to move the center point up
-    
+    // Set viewport to center on marker location
     const newViewport = {
       longitude: location.longitude,
-      latitude: location.latitude - verticalOffset, // Offset upward to better center the popup
+      latitude: location.latitude,
       zoom: Math.max(viewState.zoom, 13), // Ensure minimum zoom level
       transitionDuration: 500 // Smooth transition in milliseconds
     };
@@ -63,8 +61,8 @@ const MapComponent = () => {
               <dd>{location.artist}</dd>
               <dt>Year</dt>
               <dd>{location.year}</dd>
-              <dt>Collection</dt>
-              <dd>{location.collection}</dd>
+              {/* <dt>Collection</dt>
+              <dd>{location.collection}</dd> */}
             </dl>
             <dl>
               <dt>Materials</dt>
@@ -122,13 +120,15 @@ const MapComponent = () => {
         {selectedLocation && (
           <Popup
             longitude={selectedLocation.longitude}
-            latitude={selectedLocation.latitude - 0.002} // Small offset to better position the popup
+            latitude={selectedLocation.latitude}
             anchor="center" 
             onClose={() => setSelectedLocation(null)}
             closeOnClick={false}
-            offset={[0, -15]} // Offset upward to center more in the viewport
+            offset={[0, 0]} // Remove offset for more precise positioning
             className="artwork-popup"
             maxWidth="none"
+            closeButton={true}
+            dynamicPosition={false}
           >
             {renderPopupContent(selectedLocation)}
           </Popup>

@@ -6,7 +6,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Prima-CB Interactive Locations</h1>
+        <h1>Prima-CB Interactive Map</h1>
         {/* <p>Explore our global presence through the interactive map below</p> */}
       </header>
       
