@@ -25,20 +25,18 @@ const MapComponent = () => {
   const handleMarkerClick = (e, location) => {
     e.originalEvent.stopPropagation();
     
-    // Simply set the selected location without changing the view
-    // This will make the popup appear without moving the pin to the top
-    setSelectedLocation(location);
+    // Calculate an upward offset to show the popup more centered in the viewport
+    const verticalOffset = 0.002; // Adjust this value to move the center point up
     
-    // Optional: If you want to center on the location without pushing it to the top,
-    // you can use a slight offset in the opposite direction
     const newViewport = {
       longitude: location.longitude,
-      latitude: location.latitude,
+      latitude: location.latitude - verticalOffset, // Offset upward to better center the popup
       zoom: Math.max(viewState.zoom, 13), // Ensure minimum zoom level
       transitionDuration: 500 // Smooth transition in milliseconds
     };
     
     setViewState(newViewport);
+    setSelectedLocation(location);
   };
 
   const renderPopupContent = (location) => {
@@ -47,11 +45,13 @@ const MapComponent = () => {
         <div className="popup-content">
           <h3>{location.name}</h3>
           {location.image && (
-            <img 
-              src={location.image} 
-              alt={location.name} 
-              className="popup-image"
-            />
+            <div className="popup-image-container">
+              <img 
+                src={location.image} 
+                alt={location.name} 
+                className="popup-image"
+              />
+            </div>
           )}
           <p className="popup-description">{location.description}</p>
           {location.details && (
@@ -82,11 +82,13 @@ const MapComponent = () => {
       <div className="popup-content">
         <h3>{location.name}</h3>
         {location.image && (
-          <img 
-            src={location.image} 
-            alt={location.name} 
-            className="popup-image"
-          />
+          <div className="popup-image-container">
+            <img 
+              src={location.image} 
+              alt={location.name} 
+              className="popup-image"
+            />
+          </div>
         )}
         <p className="popup-description">{location.description}</p>
       </div>
@@ -112,7 +114,7 @@ const MapComponent = () => {
             onClick={e => handleMarkerClick(e, location)}
           >
             <div className="marker">
-              <img src="/marker-icon.svg" alt="Location Marker" />
+              <img src={`${process.env.PUBLIC_URL}/marker-icon.svg`} alt="Location Marker" />
             </div>
           </Marker>
         ))}
@@ -120,11 +122,11 @@ const MapComponent = () => {
         {selectedLocation && (
           <Popup
             longitude={selectedLocation.longitude}
-            latitude={selectedLocation.latitude}
-            anchor="top"
+            latitude={selectedLocation.latitude - 0.002} // Small offset to better position the popup
+            anchor="center" 
             onClose={() => setSelectedLocation(null)}
             closeOnClick={false}
-            offset={[0, 10]}
+            offset={[0, -15]} // Offset upward to center more in the viewport
             className="artwork-popup"
             maxWidth="none"
           >
