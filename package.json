@@ -2,12 +2,12 @@
   "name": "prima-cb-interactive-map",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://github.com/SusannaShu/prima-interactive-map",
+  "homepage": "https://susannashu.github.io/prima-interactive-map",
   "dependencies": {
-    "mapbox-gl": "^2.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-map-gl": "^7.1.0"
+    "react-map-gl": "^7.1.0",
+    "mapbox-gl": "^2.15.0"
   },
   "devDependencies": {
     "gh-pages": "^6.1.1",
