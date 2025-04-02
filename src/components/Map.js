@@ -25,22 +25,20 @@ const MapComponent = () => {
   const handleMarkerClick = (e, location) => {
     e.originalEvent.stopPropagation();
     
-    // Calculate appropriate position to ensure the popup is visible
-    // Move the map view so the marker is at the bottom center
-    // Offset depends on zoom level - higher offset at higher zoom
-    const latitudeOffset = viewState.zoom > 14 ? 0.005 : 
-                          viewState.zoom > 12 ? 0.01 : 
-                          viewState.zoom > 10 ? 0.015 : 0.02;
+    // Simply set the selected location without changing the view
+    // This will make the popup appear without moving the pin to the top
+    setSelectedLocation(location);
     
+    // Optional: If you want to center on the location without pushing it to the top,
+    // you can use a slight offset in the opposite direction
     const newViewport = {
       longitude: location.longitude,
-      latitude: location.latitude - latitudeOffset, // Offset to show popup above marker
+      latitude: location.latitude,
       zoom: Math.max(viewState.zoom, 13), // Ensure minimum zoom level
       transitionDuration: 500 // Smooth transition in milliseconds
     };
     
     setViewState(newViewport);
-    setSelectedLocation(location);
   };
 
   const renderPopupContent = (location) => {
@@ -123,10 +121,10 @@ const MapComponent = () => {
           <Popup
             longitude={selectedLocation.longitude}
             latitude={selectedLocation.latitude}
-            anchor="bottom"
+            anchor="top"
             onClose={() => setSelectedLocation(null)}
             closeOnClick={false}
-            offset={[0, -15]}
+            offset={[0, 10]}
             className="artwork-popup"
             maxWidth="none"
           >

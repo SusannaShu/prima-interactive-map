@@ -7,7 +7,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Prima-CB Interactive Locations</h1>
-        <p>Explore our global presence through the interactive map below</p>
+        {/* <p>Explore our global presence through the interactive map below</p> */}
       </header>
       
       <main>
