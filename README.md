@@ -7,6 +7,7 @@ An interactive map application for Prima-CB that displays locations and provides
 - Interactive map with custom markers
 - Detailed popups with images and information
 - Responsive design for all devices
+- Location sharing with intelligent viewport adjustment
 - GitHub Pages deployment support
 
 ## Technologies Used
@@ -60,6 +61,19 @@ If this is your first deployment:
 2. Go to your GitHub repository settings → Pages.
 3. Make sure the source is set to the `gh-pages` branch.
 4. Your site should be published at `https://yourusername.github.io/prima-interactive-map/`.
+
+## Using the Location Sharing Feature
+
+The application includes a location sharing feature that helps users see both their current location and sculpture locations on the map:
+
+1. Click the "Share My Location" button in the top-right corner of the map.
+2. Allow the browser to access your location when prompted.
+3. The map will automatically adjust to show:
+   - If a sculpture is already selected: Both your location and the selected sculpture in the same view
+   - If no sculpture is selected: Your location and the nearest sculpture
+   - If no sculptures are available: Just your location
+
+This feature helps visitors easily navigate to sculptures by showing the spatial relationship between their current position and artwork locations.
 
 ## Customizing Location Data
 
