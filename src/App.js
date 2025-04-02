@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MapComponent from './components/Map';
+import MapComponent, { LanguageContext } from './components/Map';
 import './App.css';
 
 function App() {
@@ -13,8 +13,8 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-      {/* <img src="/logo.png" alt="prima cb logo" style={{ height: '40px', marginRight: '10px' }} /> */}
-        <h1>PRIMA Interactive Map</h1>
+        {/* <img src="/logo.png" alt="prima cb logo" /> */}
+        <h1>{language === 'en' ? 'PRIMA Interactive Map' : 'Carte Interactive PRIMA'}</h1>
         <div className="language-selector">
           <button 
             className={`lang-btn ${language === 'fr' ? 'active' : ''}`}
@@ -33,7 +33,9 @@ function App() {
       </header>
       
       <main>
-        <MapComponent />
+        <LanguageContext.Provider value={language}>
+          <MapComponent />
+        </LanguageContext.Provider>
       </main>
       
       <footer className="app-footer">

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import Map, { Marker, Popup } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './Map.css';
@@ -7,10 +7,29 @@ import locations from '../data/locations';
 // Mapbox access token
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoic3VzYW5uYXNodSIsImEiOiJjbTZkajNkbWYwb3EyMmlxczdpeDljamxtIn0.0UgPtm1Ag2ai0QbmRszBBg';
 
+// Create a language context to be used in the app
+export const LanguageContext = React.createContext('en');
+
 // Location Request Component
 const LocationRequest = ({ onLocationUpdate }) => {
+  const language = useContext(LanguageContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const locationText = {
+    en: {
+      button: 'Share My Location',
+      loading: 'Getting location...',
+      error: 'Unable to retrieve your location',
+      unsupported: 'Geolocation is not supported by your browser'
+    },
+    fr: {
+      button: 'Partager Ma Position',
+      loading: 'Localisation en cours...',
+      error: 'Impossible de récupérer votre position',
+      unsupported: 'La géolocalisation n\'est pas prise en charge par votre navigateur'
+    }
+  };
 
   const handleLocationRequest = () => {
     setLoading(true);
@@ -27,13 +46,13 @@ const LocationRequest = ({ onLocationUpdate }) => {
         },
         (err) => {
           setLoading(false);
-          setError('Unable to retrieve your location');
+          setError(locationText[language].error);
           console.error(err);
         }
       );
     } else {
       setLoading(false);
-      setError('Geolocation is not supported by your browser');
+      setError(locationText[language].unsupported);
     }
   };
 
@@ -44,7 +63,7 @@ const LocationRequest = ({ onLocationUpdate }) => {
         disabled={loading}
         className="location-btn"
       >
-        {loading ? 'Getting location...' : 'Share My Location'}
+        {loading ? locationText[language].loading : locationText[language].button}
       </button>
       {error && <p className="location-error">{error}</p>}
     </div>
@@ -52,6 +71,9 @@ const LocationRequest = ({ onLocationUpdate }) => {
 };
 
 const MapComponent = () => {
+  // Get current language from context
+  const language = useContext(LanguageContext);
+  
   // State for viewport
   const [viewState, setViewState] = useState({
     longitude: 1.7191, // Centered on Prima-CB region
@@ -67,6 +89,14 @@ const MapComponent = () => {
   
   // Reference to the map component
   const mapRef = useRef(null);
+
+  // Helper function to get text based on language
+  const getText = (field) => {
+    if (field && typeof field === 'object' && field[language]) {
+      return field[language];
+    }
+    return field; // Return as is if not a language object
+  };
 
   // Handle marker click
   const handleMarkerClick = (e, location) => {
@@ -98,36 +128,53 @@ const MapComponent = () => {
   };
 
   const renderPopupContent = (location) => {
+    const labels = {
+      en: {
+        artist: 'Artist',
+        year: 'Year',
+        collection: 'Collection',
+        materials: 'Materials',
+        dimensions: 'Dimensions'
+      },
+      fr: {
+        artist: 'Artiste',
+        year: 'Année',
+        collection: 'Collection',
+        materials: 'Matériaux',
+        dimensions: 'Dimensions'
+      }
+    };
+    
     if (location.artist) { // This is an artwork
       return (
         <div className="popup-content">
-          <h3>{location.name}</h3>
+          <h3>{getText(location.name)}</h3>
           {location.image && (
             <div className="popup-image-container">
               <img 
                 src={location.image} 
-                alt={location.name} 
+                alt={getText(location.name)} 
                 className="popup-image"
               />
             </div>
           )}
-          <p className="popup-description">{location.description}</p>
+          <p className="popup-description">{getText(location.description)}</p>
           {location.details && (
-            <p className="popup-description">{location.details}</p>
+            <p className="popup-description">{getText(location.details)}</p>
           )}
           <div className="artwork-details">
             <dl>
-              <dt>Artist</dt>
+              <dt>{labels[language].artist}</dt>
               <dd>{location.artist}</dd>
-              <dt>Year</dt>
+              <dt>{labels[language].year}</dt>
               <dd>{location.year}</dd>
-              {/* <dt>Collection</dt>
-              <dd>{location.collection}</dd> */}
+              {/* <dt>{labels[language].collection}</dt>
+              <dd>{getText(location.collection)}</dd> */}
             </dl>
             <dl>
-              <dt>Materials</dt>
-              <dd>{location.materials}</dd>
-              <dt>Dimensions</dt>
+              <dt>{labels[language].materials}</dt>
+              <dd>{getText(location.materials)}</dd>
+              <dt>{labels[language].dimensions}</dt>
               <dd>{location.dimensions}</dd>
             </dl>
           </div>
@@ -138,17 +185,17 @@ const MapComponent = () => {
     // Regular location popup
     return (
       <div className="popup-content">
-        <h3>{location.name}</h3>
+        <h3>{getText(location.name)}</h3>
         {location.image && (
           <div className="popup-image-container">
             <img 
               src={location.image} 
-              alt={location.name} 
+              alt={getText(location.name)} 
               className="popup-image"
             />
           </div>
         )}
-        <p className="popup-description">{location.description}</p>
+        <p className="popup-description">{getText(location.description)}</p>
       </div>
     );
   };
