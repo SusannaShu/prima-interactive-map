@@ -19,7 +19,7 @@
 /* Custom styling for mapboxgl popup */
 .mapboxgl-popup {
   max-width: none !important;
-  z-index: 5;
+  z-index: 20;
   transform: translate(-50%, -50%) !important;
   left: 50% !important;
   top: 50% !important;
@@ -31,6 +31,7 @@
   border-radius: 8px;
   overflow: visible;
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+  z-index: 20;
   max-height: 70vh;
 }
 
@@ -52,7 +53,7 @@
   width: 35px !important;
   height: 35px !important;
   line-height: 30px !important;
-  color: #003366 !important;
+  color: #000000 !important;
   opacity: 0.8;
   right: 5px !important;
   top: 5px !important;
@@ -84,7 +85,7 @@
 
 .popup-content h3 {
   margin: 0;
-  color: #003366;
+  color: #000000;
   font-size: 24px;
   padding-bottom: 10px;
   border-bottom: 2px solid #eee;
@@ -194,7 +195,7 @@
 }
 
 .location-btn {
-  background-color: #003366;
+  background-color: #000000;
   color: white;
   border: none;
   padding: 8px 12px;
@@ -207,7 +208,7 @@
 }
 
 .location-btn:hover {
-  background-color: #004488;
+  background-color: #666;
 }
 
 .location-btn:disabled {
@@ -231,7 +232,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background-color: #003366;
+  background-color: #000000;
   border: 3px solid white;
   box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.5);
   box-sizing: border-box;
