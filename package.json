@@ -2,7 +2,6 @@
   "name": "prima-cb-interactive-map",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://susannashu.github.io/prima-interactive-map",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

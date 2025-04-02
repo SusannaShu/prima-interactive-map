@@ -114,7 +114,7 @@ const MapComponent = () => {
             onClick={e => handleMarkerClick(e, location)}
           >
             <div className="marker">
-              <img src={`${process.env.PUBLIC_URL}/marker-icon.svg`} alt="Location Marker" />
+              <img src="/marker-icon.svg" alt="Location Marker" />
             </div>
           </Marker>
         ))}
