@@ -118,13 +118,124 @@ const MapComponent = () => {
   const handleLocationUpdate = (location) => {
     setUserLocation(location);
     
-    // Optionally update viewport to show user location
-    setViewState({
-      longitude: location.longitude,
-      latitude: location.latitude,
-      zoom: 12,
-      transitionDuration: 1000
+    // If a sculpture is selected, fit both points in the viewport
+    if (selectedLocation) {
+      // Calculate bounds to fit both the user and selected sculpture
+      const bounds = getBoundingBox([
+        [location.longitude, location.latitude],
+        [selectedLocation.longitude, selectedLocation.latitude]
+      ]);
+      
+      // Use mapRef to fit bounds
+      if (mapRef.current) {
+        // Add padding to the bounds for better visibility
+        const padding = { top: 50, bottom: 50, left: 50, right: 50 };
+        
+        // Adjust the viewport to fit both points
+        mapRef.current.fitBounds(
+          [
+            [bounds.minLng, bounds.minLat], // Southwest corner
+            [bounds.maxLng, bounds.maxLat]  // Northeast corner
+          ],
+          { padding, duration: 1000 }
+        );
+      }
+    } else {
+      // Find the nearest sculpture to show on the map
+      let nearestLocationId = null;
+      let shortestDistance = Infinity;
+      
+      // Calculate distances to all locations
+      locations.forEach(loc => {
+        const distance = calculateDistance(
+          location.latitude, location.longitude,
+          loc.latitude, loc.longitude
+        );
+        
+        if (distance < shortestDistance) {
+          shortestDistance = distance;
+          nearestLocationId = loc.id;
+        }
+      });
+      
+      // If we found a nearby sculpture, show both
+      if (nearestLocationId) {
+        const nearestLocation = locations.find(loc => loc.id === nearestLocationId);
+        
+        // Calculate bounds to fit both points
+        const bounds = getBoundingBox([
+          [location.longitude, location.latitude],
+          [nearestLocation.longitude, nearestLocation.latitude]
+        ]);
+        
+        // Use mapRef to fit bounds
+        if (mapRef.current) {
+          const padding = { top: 50, bottom: 50, left: 50, right: 50 };
+          
+          mapRef.current.fitBounds(
+            [
+              [bounds.minLng, bounds.minLat],
+              [bounds.maxLng, bounds.maxLat]
+            ],
+            { padding, duration: 1000 }
+          );
+        }
+      } else {
+        // Just center on user location if no sculptures
+        setViewState({
+          longitude: location.longitude,
+          latitude: location.latitude,
+          zoom: 12,
+          transitionDuration: 1000
+        });
+      }
+    }
+  };
+
+  // Helper function to calculate distance between two points (Haversine formula)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const distance = R * c; // Distance in km
+    return distance;
+  };
+  
+  // Helper function to convert degrees to radians
+  const deg2rad = (deg) => {
+    return deg * (Math.PI/180);
+  };
+
+  // Helper function to calculate bounding box for two points
+  const getBoundingBox = (points) => {
+    let minLat = 90;
+    let maxLat = -90;
+    let minLng = 180;
+    let maxLng = -180;
+    
+    points.forEach(point => {
+      const [lng, lat] = point;
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+      minLng = Math.min(minLng, lng);
+      maxLng = Math.max(maxLng, lng);
     });
+    
+    // Add a small buffer (about 10% of the range)
+    const latBuffer = (maxLat - minLat) * 0.1;
+    const lngBuffer = (maxLng - minLng) * 0.1;
+    
+    return {
+      minLat: minLat - latBuffer,
+      maxLat: maxLat + latBuffer,
+      minLng: minLng - lngBuffer,
+      maxLng: maxLng + lngBuffer
+    };
   };
 
   const renderPopupContent = (location) => {

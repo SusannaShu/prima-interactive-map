@@ -14,7 +14,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         {/* <img src="/logo.png" alt="prima cb logo" /> */}
-        <h1>{language === 'en' ? 'PRIMA Interactive Map' : 'Carte Interactive PRIMA'}</h1>
+        <h1>{language === 'en' ? 'PRIMA Interactive Map' : 'PRIMA Carte Interactive'}</h1>
         <div className="language-selector">
           <button 
             className={`lang-btn ${language === 'fr' ? 'active' : ''}`}
