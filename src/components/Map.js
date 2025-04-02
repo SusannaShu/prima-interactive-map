@@ -7,6 +7,50 @@ import locations from '../data/locations';
 // Mapbox access token
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoic3VzYW5uYXNodSIsImEiOiJjbTZkajNkbWYwb3EyMmlxczdpeDljamxtIn0.0UgPtm1Ag2ai0QbmRszBBg';
 
+// Location Request Component
+const LocationRequest = ({ onLocationUpdate }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleLocationRequest = () => {
+    setLoading(true);
+    setError(null);
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLoading(false);
+          onLocationUpdate({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (err) => {
+          setLoading(false);
+          setError('Unable to retrieve your location');
+          console.error(err);
+        }
+      );
+    } else {
+      setLoading(false);
+      setError('Geolocation is not supported by your browser');
+    }
+  };
+
+  return (
+    <div className="location-request">
+      <button 
+        onClick={handleLocationRequest} 
+        disabled={loading}
+        className="location-btn"
+      >
+        {loading ? 'Getting location...' : 'Share My Location'}
+      </button>
+      {error && <p className="location-error">{error}</p>}
+    </div>
+  );
+};
+
 const MapComponent = () => {
   // State for viewport
   const [viewState, setViewState] = useState({
@@ -17,6 +61,9 @@ const MapComponent = () => {
 
   // State for selected popup
   const [selectedLocation, setSelectedLocation] = useState(null);
+  
+  // State for user location
+  const [userLocation, setUserLocation] = useState(null);
   
   // Reference to the map component
   const mapRef = useRef(null);
@@ -35,6 +82,19 @@ const MapComponent = () => {
     
     setViewState(newViewport);
     setSelectedLocation(location);
+  };
+
+  // Handle user location update
+  const handleLocationUpdate = (location) => {
+    setUserLocation(location);
+    
+    // Optionally update viewport to show user location
+    setViewState({
+      longitude: location.longitude,
+      latitude: location.latitude,
+      zoom: 12,
+      transitionDuration: 1000
+    });
   };
 
   const renderPopupContent = (location) => {
@@ -95,6 +155,8 @@ const MapComponent = () => {
 
   return (
     <div className="map-container">
+      <LocationRequest onLocationUpdate={handleLocationUpdate} />
+      
       <Map
         ref={mapRef}
         {...viewState}
@@ -116,6 +178,20 @@ const MapComponent = () => {
             </div>
           </Marker>
         ))}
+
+        {/* Display user location marker if available */}
+        {userLocation && (
+          <Marker
+            longitude={userLocation.longitude}
+            latitude={userLocation.latitude}
+            anchor="center"
+          >
+            <div className="user-marker">
+              <div className="user-marker-dot"></div>
+              <div className="user-marker-pulse"></div>
+            </div>
+          </Marker>
+        )}
 
         {selectedLocation && (
           <Popup

@@ -178,4 +178,87 @@
   .map-container {
     height: 70vh; /* Slightly smaller map on mobile for better popup visibility */
   }
+}
+
+/* Location request component */
+.location-request {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background: white;
+  padding: 5px;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-family: 'TextFont', sans-serif;
+}
+
+.location-btn {
+  background-color: #003366;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: 'TextFont', sans-serif;
+  transition: background-color 0.2s;
+}
+
+.location-btn:hover {
+  background-color: #004488;
+}
+
+.location-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.location-error {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 0 5px;
+}
+
+/* User location marker */
+.user-marker {
+  position: relative;
+}
+
+.user-marker-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #003366;
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.5);
+  box-sizing: border-box;
+  position: absolute;
+  top: -8px;
+  left: -8px;
+}
+
+.user-marker-pulse {
+  background-color: rgba(0, 51, 102, 0.2);
+  border-radius: 50%;
+  height: 40px;
+  width: 40px;
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  z-index: -1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 } 
