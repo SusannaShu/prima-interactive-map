@@ -76,9 +76,10 @@ const MapComponent = () => {
   
   // State for viewport
   const [viewState, setViewState] = useState({
-    longitude: 1.7191, // Centered on Prima-CB region
-    latitude: 50.8297,
-    zoom: 12
+    
+    longitude: 1.7178452, 
+    latitude: 50.8372302, 
+    zoom: 15 // Increased zoom level for better pin visibility
   });
 
   // State for selected popup
@@ -89,6 +90,9 @@ const MapComponent = () => {
   
   // Reference to the map component
   const mapRef = useRef(null);
+
+  // State for current slide
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   // Helper function to get text based on language
   const getText = (field) => {
@@ -101,6 +105,9 @@ const MapComponent = () => {
   // Handle marker click
   const handleMarkerClick = (e, location) => {
     e.originalEvent.stopPropagation();
+    
+    // Reset current slide to 0 when opening a new popup
+    setCurrentSlide(0);
     
     // Set viewport to center on marker location
     const newViewport = {
@@ -245,49 +252,119 @@ const MapComponent = () => {
         year: 'Year',
         collection: 'Collection',
         materials: 'Materials',
-        dimensions: 'Dimensions'
+        dimensions: 'Dimensions',
+        prev: 'Previous',
+        next: 'Next'
       },
       fr: {
         artist: 'Artiste',
         year: 'Année',
         collection: 'Collection',
         materials: 'Matériaux',
-        dimensions: 'Dimensions'
+        dimensions: 'Dimensions',
+        prev: 'Précédent',
+        next: 'Suivant'
       }
+    };
+
+    const handlePrevious = (e) => {
+      e.stopPropagation();
+      setCurrentSlide(current => (current > 0 ? current - 1 : 2));
+    };
+
+    const handleNext = (e) => {
+      e.stopPropagation();
+      setCurrentSlide(current => (current < 2 ? current + 1 : 0));
+    };
+
+    const handleDotClick = (index) => {
+      setCurrentSlide(index);
     };
     
     if (location.artist) { // This is an artwork
+      const slides = [
+        {
+          image: location.image,
+          content: (
+            <div className="popup-overlay">
+              <h3>{getText(location.name)}</h3>
+              <div className="artist">{location.artist}</div>
+            </div>
+          )
+        },
+        {
+          className: 'details',
+          noImage: true,
+          content: (
+            <div className="details-content">
+              <div className="year">{location.year}</div>
+              <div className="specs">{getText(location.materials)}<br/>{location.dimensions}</div>
+              <div className="description">{getText(location.description)}</div>
+            </div>
+          )
+        },
+        {
+          className: 'artist-info',
+          noImage: true,
+          content: (
+            <>
+              <img 
+                src="https://res.cloudinary.com/sheyou/image/upload/v1744134549/Screen_Shot_2025_04_08_at_6_13_48_PM_fa97918287.png"
+                alt="Artist"
+                className="artist-info-image"
+              />
+              <div className="artist-info-text">
+                <div className="name">TIM FORMGREN</div>
+                <div className="details">
+                  AA School of Architecture<br />
+                  London, UK
+                </div>
+              </div>
+            </>
+          )
+        }
+      ];
+
       return (
         <div className="popup-content">
-          <h3>{getText(location.name)}</h3>
-          {location.image && (
-            <div className="popup-image-container">
-              <img 
-                src={location.image} 
-                alt={getText(location.name)} 
-                className="popup-image"
-              />
+          <div className="popup-image-container">
+            <div className="popup-slides">
+              {slides.map((slide, index) => (
+                <div 
+                  key={index} 
+                  className={`popup-slide ${slide.className || ''} ${index === currentSlide ? 'active' : ''}`}
+                >
+                  {!slide.noImage && (
+                    <img 
+                      src={slide.image} 
+                      alt={getText(location.name)} 
+                      className="popup-image"
+                    />
+                  )}
+                  {slide.content}
+                </div>
+              ))}
             </div>
-          )}
-          <p className="popup-description">{getText(location.description)}</p>
-          {location.details && (
-            <p className="popup-description">{getText(location.details)}</p>
-          )}
-          <div className="artwork-details">
-            <dl>
-              <dt>{labels[language].artist}</dt>
-              <dd>{location.artist}</dd>
-              <dt>{labels[language].year}</dt>
-              <dd>{location.year}</dd>
-              {/* <dt>{labels[language].collection}</dt>
-              <dd>{getText(location.collection)}</dd> */}
-            </dl>
-            <dl>
-              <dt>{labels[language].materials}</dt>
-              <dd>{getText(location.materials)}</dd>
-              <dt>{labels[language].dimensions}</dt>
-              <dd>{location.dimensions}</dd>
-            </dl>
+            <button className="popup-nav-button popup-nav-prev" onClick={handlePrevious} aria-label={labels[language].prev}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <button className="popup-nav-button popup-nav-next" onClick={handleNext} aria-label={labels[language].next}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+            <div className="popup-dots">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  className={`popup-dot ${index === currentSlide ? 'active' : ''}`}
+                  onClick={() => handleDotClick(index)}
+                  aria-label={`Slide ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       );
@@ -296,23 +373,25 @@ const MapComponent = () => {
     // Regular location popup
     return (
       <div className="popup-content">
-        <h3>{getText(location.name)}</h3>
+        <div className="popup-image-container">
         {location.image && (
-          <div className="popup-image-container">
             <img 
               src={location.image} 
               alt={getText(location.name)} 
               className="popup-image"
             />
+          )}
+          <div className="popup-overlay">
+            <h3>{getText(location.name)}</h3>
           </div>
-        )}
+        </div>
         <p className="popup-description">{getText(location.description)}</p>
       </div>
     );
   };
 
   return (
-    <div className="map-container">
+    <div className={`map-container ${selectedLocation ? 'has-popup' : ''}`}>
       <LocationRequest onLocationUpdate={handleLocationUpdate} />
       
       <Map
