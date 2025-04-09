@@ -317,7 +317,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .popup-content {
     width: 90vw;
     height: 90vw;
