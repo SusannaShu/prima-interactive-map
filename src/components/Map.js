@@ -283,6 +283,7 @@ const MapComponent = () => {
     
     if (location.artist) { // This is an artwork
       const slides = [
+        // Slide 1: Image with name/artist overlay
         {
           image: location.image,
           content: (
@@ -292,22 +293,34 @@ const MapComponent = () => {
             </div>
           )
         },
+        // Slide 2: Video background with text overlay
         {
           className: 'details',
           noImage: true,
           content: (
-            <div className="details-content">
-              <div className="year">{location.year}</div>
-              <div className="specs">{getText(location.materials)}<br/>{location.dimensions}</div>
-              <div className="description">{getText(location.description)}</div>
+            <div className="slide-container">
+              <video 
+                className="slide-video"
+                src="https://res.cloudinary.com/sheyou/video/upload/v1744197348/Whats_App_Video_2025_04_09_at_13_15_07_589bdc4dc1.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+              <div className="slide-content">
+                <div className="year">{location.year}</div>
+                <div className="specs">{getText(location.materials)}<br/>{location.dimensions}</div>
+                <div className="description">{getText(location.description)}</div>
+              </div>
             </div>
           )
         },
+        // Slide 3: Artist info on white background
         {
           className: 'artist-info',
           noImage: true,
           content: (
-            <>
+            <div className="artist-container">
               <img 
                 src="https://res.cloudinary.com/sheyou/image/upload/v1744134549/Screen_Shot_2025_04_08_at_6_13_48_PM_fa97918287.png"
                 alt="Artist"
@@ -320,7 +333,7 @@ const MapComponent = () => {
                   London, UK
                 </div>
               </div>
-            </>
+            </div>
           )
         }
       ];
