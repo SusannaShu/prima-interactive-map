@@ -62,7 +62,5 @@ const locations = [
 5. Test across devices and browsers
 
 ## Mapbox Access Token
-The provided Mapbox access token is:
-`pk.eyJ1Ijoic3VzYW5uYXNodSIsImEiOiJjbTZkajNkbWYwb3EyMmlxczdpeDljamxtIn0.0UgPtm1Ag2ai0QbmRszBBg`
 
 This token should be stored in an environment variable for security in the actual implementation. 

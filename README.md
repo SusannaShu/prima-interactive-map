@@ -98,18 +98,34 @@ To integrate this interactive map into the Prima-CB website with an admin backen
 1. Create a Mapbox account at https://www.mapbox.com/ if Prima-CB doesn't already have one
 2. Generate a new API access token in the Mapbox account dashboard
 3. Set usage restrictions on the token (domain restrictions, rate limits) for security
-4. Replace the current Mapbox token in the code:
+4. Use environment variables to store the Mapbox token:
+
+   a. Create a `.env` file in the root of the project (if it doesn't exist):
+   ```
+   REACT_APP_MAPBOX_TOKEN=your_mapbox_token_here
+   ```
+
+   b. Add `.env` to your `.gitignore` file to prevent committing sensitive tokens
+   ```
+   # .gitignore
+   .env
+   .env.local
+   .env.development.local
+   .env.test.local
+   .env.production.local
+   ```
+
+   c. Update the Map component to use the environment variable:
    ```javascript
-   // In src/components/Map.js, replace:
-   const MAPBOX_TOKEN = 'pk.eyJ1Ijoic3VzYW5uYXNodSIsImEiOiJjbTZkajNkbWYwb3EyMmlxczdpeDljamxtIn0.0UgPtm1Ag2ai0QbmRszBBg';
    
-   // With Prima-CB's token:
-   const MAPBOX_TOKEN = 'YOUR_NEW_MAPBOX_TOKEN';
-   
-   // For better security, consider loading from environment variables:
+   // With:
    const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN;
    ```
-5. If using environment variables, ensure they are properly set in the hosting environment
+
+5. For production deployment, set the environment variable on your hosting platform:
+   - Netlify: Add environment variable in Site settings > Build & deploy > Environment
+   - Vercel: Add environment variable in Project settings > Environment Variables
+   - Traditional hosting: Set environment variables in your server configuration
 
 ### 4. Frontend Map Integration
 

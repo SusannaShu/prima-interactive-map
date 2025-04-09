@@ -5,7 +5,7 @@ import './Map.css';
 import locations from '../data/locations';
 
 // Mapbox access token
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoic3VzYW5uYXNodSIsImEiOiJjbTZkajNkbWYwb3EyMmlxczdpeDljamxtIn0.0UgPtm1Ag2ai0QbmRszBBg';
+const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN
 
 // Create a language context to be used in the app
 export const LanguageContext = React.createContext('en');
