@@ -329,7 +329,29 @@ const locations = [
     longitude: 1.7164237, 
     latitude: 50.8353999, 
     image: "https://www.prima-cb.com/data//photos/prima-photo-jdueyiah/prima-photo-jdueyiah-xl.jpg"
+  },
+  {
+    id: 14,
+    name: {
+      en: "Second souffle",
+      fr: "Second souffle"
+    },
+    description: {
+      en: `This micro-architecture is made up of cylindrical pieces: “carrots” made of low-carbon concrete and reused concrete from local building sites. A pavilion that evokes the history of our cities and the future of our building processes.`,
+      fr: `Cette micro architecture est composée de pièces cylindriques : des « carottes" faites de béton bas carbone et de béton de réemploi issu de chantiers locaux. Une oeuvre à traverser qui évoque l’histoire de nos villes et le futur de nos constructions.`
+    },
+    artist: "Émilie Marzougui",
+    year: "2024",
+    dimensions: "1000x360x240cm",
+    materials: {
+      en: "Reused concrete and low carbone concrete",
+      fr: "Béton de réemploi et béton bas carbone"
+    },
+    longitude: 1.609594, // Example coordinate - replace with actual
+    latitude: 50.772407, // Example coordinate - replace with actual
+    image: "https://www.prima-cb.com/data//photos/prima-photo-htd1pjeb/prima-photo-htd1pjeb-xxl.jpg"
   }
+ 
  
  
  

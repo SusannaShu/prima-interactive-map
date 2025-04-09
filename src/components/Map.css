@@ -176,7 +176,7 @@
 
 .slide-content {
   position: absolute;
-  bottom: 60px;
+  bottom: 100px;
   left: 60px;
   right: 60px;
   z-index: 2;
@@ -263,6 +263,7 @@
     bottom: 40px !important;
     left: 40px !important;
     right: 40px !important;
+    padding-bottom: 0;
   }
 
   .artist-info-text .name {
@@ -356,6 +357,7 @@
   color: black;
   font-family: 'TextFont', sans-serif;
   text-align: left;
+  padding-bottom: 20px;
 }
 
 .artist-info-text .website {
