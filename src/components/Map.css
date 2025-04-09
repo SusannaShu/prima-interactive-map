@@ -322,7 +322,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
-    padding-top: 20px;
+    padding-top: 5px;
   }
   
   .popup-overlay {
@@ -361,8 +361,8 @@
 /* Special adjustment for medium-small screens to reduce bottom spacing */
 @media (min-width: 400px) and (max-width: 600px) {
   .artist-info-image {
-    width: 250px !important;
-    height: 250px !important;
+    width: 240px !important;
+    height: 240px !important;
   }
   
   .artist-info-text {
@@ -371,7 +371,7 @@
   }
   
   .artist-container {
-    padding: 20px 0 0 0;
+    padding: 15px 0 0 0;
     justify-content: space-between;
     height: 100%;
   }
@@ -440,14 +440,14 @@
 
 .artist-info-text .name {
   font-size: 48px;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
   font-family: 'TextFont', sans-serif;
   font-weight: normal;
 }
 
 .artist-info-text .details {
   font-size: 20px;
-  line-height: 1.4;
+  line-height: 1.2;
   font-family: 'TextFont', sans-serif;
   opacity: 0.8;
 }
