@@ -298,7 +298,7 @@
     bottom: auto !important;
     left: 20px !important;
     right: 20px !important;
-    padding-bottom: 20px !important;
+    padding-bottom: 40px !important;
   }
 
   .artist-info-text .website {
@@ -366,7 +366,7 @@
   
   .artist-info-text {
     bottom: 20px !important;
-    padding-bottom: 20px !important;
+    padding-bottom: 50px !important;
   }
   
   .artist-container {
