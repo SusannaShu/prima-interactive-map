@@ -295,7 +295,8 @@
 
   .artist-info-text {
     position: relative !important;
-    bottom: auto !important;
+    bottom: 5px !important;
+    top:5px;
     left: 20px !important;
     right: 20px !important;
     padding-bottom: 40px !important;

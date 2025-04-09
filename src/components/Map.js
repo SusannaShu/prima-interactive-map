@@ -327,7 +327,6 @@ const MapComponent = () => {
                 className="artist-info-image"
               />
               <div className="artist-info-text">
-                <div className="website">timformgren.com</div>
                 <div className="name">TIM FORMGREN</div>
                 <div className="details">
                   AA School of Architecture<br />
