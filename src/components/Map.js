@@ -301,7 +301,7 @@ const MapComponent = () => {
             <div className="slide-container">
               <video 
                 className="slide-video"
-                src="https://res.cloudinary.com/sheyou/video/upload/v1744197348/Whats_App_Video_2025_04_09_at_13_15_07_589bdc4dc1.mp4"
+                src={location.video}
                 autoPlay
                 loop
                 muted
@@ -322,15 +322,20 @@ const MapComponent = () => {
           content: (
             <div className="artist-container">
               <img 
-                src="https://res.cloudinary.com/sheyou/image/upload/v1744134549/Screen_Shot_2025_04_08_at_6_13_48_PM_fa97918287.png"
-                alt="Artist"
+                src={location.artist_details.photo}
+                alt={location.artist}
                 className="artist-info-image"
               />
               <div className="artist-info-text">
-                <div className="name">TIM FORMGREN</div>
+                {location.artist_details.website && (
+                  <div className="website">
+                    {location.artist_details.website.replace(/^https?:\/\//, '')}
+                  </div>
+                )}
+                <div className="name">{location.artist}</div>
                 <div className="details">
-                  AA School of Architecture<br />
-                  London, UK
+                  {location.artist_details.school}<br />
+                  {location.artist_details.location}
                 </div>
               </div>
             </div>

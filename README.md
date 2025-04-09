@@ -21,29 +21,6 @@ A live demo of the interactive map is available at:
 - React
 - Mapbox GL JS
 - React-Map-GL
-
-## Setup and Installation
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/prima-interactive-map.git
-   cd prima-interactive-map
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Update the `homepage` field in `package.json`:
-   ```json
-   "homepage": "https://yourusername.github.io/prima-interactive-map"
-   ```
-   Replace `yourusername` with your actual GitHub username.
-
-4. Start the development server:
-   ```
-   npm start
    ```
 
 ## Integration Plan for Prima-CB Website
