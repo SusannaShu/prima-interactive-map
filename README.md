@@ -7,7 +7,6 @@ An interactive map application for Prima-CB that displays locations and provides
 A live demo of the interactive map is available at:  
 [https://prima-interactive-map.netlify.app/](https://prima-interactive-map.netlify.app/)
 
-[![Prima Interactive Map Preview](https://i.imgur.com/xZKnPFO.png)](https://prima-interactive-map.netlify.app/)
 
 ## Features
 
