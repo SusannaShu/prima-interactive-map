@@ -166,8 +166,8 @@ const locations = [
       en: "Concrete and stone",
       fr: "Béton et pierre"
     },
-    longitude: 1.7191, 
-    latitude: 50.8297, 
+    longitude: 1.7181708, 
+    latitude: 50.8347649,
     image: "https://maphub.net/media/images/9/ok/9ok8str0k2bs01dg/1344_1008.jpg"
   },{
     id: 9,
