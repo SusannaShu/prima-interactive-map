@@ -6,7 +6,7 @@ import locations from '../data/locations';
 
 // Mapbox access token
 const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN
-
+console.log(999, MAPBOX_TOKEN)
 // Create a language context to be used in the app
 export const LanguageContext = React.createContext('en');
 
@@ -79,7 +79,7 @@ const MapComponent = () => {
     
     longitude: 1.7178452, 
     latitude: 50.8372302, 
-    zoom: 15 // Increased zoom level for better pin visibility
+    zoom: 14 // Increased zoom level for better pin visibility
   });
 
   // State for selected popup
@@ -327,6 +327,7 @@ const MapComponent = () => {
                 className="artist-info-image"
               />
               <div className="artist-info-text">
+                <div className="website">timformgren.com</div>
                 <div className="name">TIM FORMGREN</div>
                 <div className="details">
                   AA School of Architecture<br />
