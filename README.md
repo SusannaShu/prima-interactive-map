@@ -1,236 +1,109 @@
-# Prima-CB Interactive Map
+# Prima Interactive Map (Vue.js)
 
-An interactive map application for Prima-CB that displays locations and provides detailed information in popup windows when markers are clicked.
+This is a Vue.js implementation of the Prima interactive map, designed to be integrated with the Prima website.
 
-## Live Demo
+## Project Setup
 
-A live demo of the interactive map is available at:  
-[https://prima-interactive-map.netlify.app/](https://prima-interactive-map.netlify.app/)
+```
+cd vue-implementation
+npm install
+```
 
+### Environment Variables
 
-## Features
+Create a `.env` file in the vue-implementation directory with:
 
-- Interactive map with custom markers
-- Detailed popups with images and information
-- Responsive design for all devices
-- Location sharing with intelligent viewport adjustment
-- Multilingual support (English/French)
+```
+VUE_APP_MAPBOX_TOKEN=your_mapbox_access_token
+```
 
-## Technologies Used
+### Compiles and hot-reloads for development
 
-- React
-- Mapbox GL JS
-- React-Map-GL
-   ```
+```
+npm run serve
+```
 
-## Integration Plan for Prima-CB Website
+### Compiles and minifies for production
 
-To integrate this interactive map into the Prima-CB website with an admin backend for data management, follow these steps:
+```
+npm run build
+```
 
-### 1. Backend API Development
+## Integration with Prima Website
 
-1. Create RESTful API endpoints in your existing backend system:
-   - `GET /api/locations` - Retrieve all locations
-   - `GET /api/locations/:id` - Retrieve a specific location
-   - `POST /api/locations` - Create a new location
-   - `PUT /api/locations/:id` - Update a location
-   - `DELETE /api/locations/:id` - Delete a location
+### Method 1: Direct Integration
 
-2. Design the database schema based on the current location structure:
-   ```
-   Location {
-     id: Integer (Primary Key)
-     name: JSON Object {en: String, fr: String}
-     description: JSON Object {en: String, fr: String}
-     artist: String 
-     year: String 
-     dimensions: String 
-     materials: JSON Object {en: String, fr: String} 
-     longitude: Float
-     latitude: Float
-     image: String (URL)
-     video: String (URL for second slide video) 
-     artist_details: Object {
-       photo: String (URL for artist photo) 
-       school: String (artist's school or institution) 
-       location: String (artist's base location) 
-       website: String (URL to artist's website) 
-     } 
-   }
-   ```
+As a Vue component, this map can be directly integrated into the Prima website's Vue.js codebase:
 
-### 2. Admin Interface Development
+1. Copy the `src/components/MapComponent.vue` file and the `src/data/locations.js` file into your project
+2. Install the required dependencies (mapbox-gl, vue-mapbox)
+3. Import and use the component in your Vue application
 
-1. Create admin forms for location management:
-   - Location creation form with fields for all attributes
-   - Location editing interface
-   - Location list view with search and filtering
-   - Image upload functionality that returns URLs for the image field
+```js
+import MapComponent from './path/to/MapComponent.vue';
 
-2. Implement validation to ensure required fields (id, name, description, coordinates) are present
-
-### 3. Mapbox API Key
-
-1. Create a Mapbox account at https://www.mapbox.com/ if Prima-CB doesn't already have one
-2. Generate a new API access token in the Mapbox account dashboard
-3. Set usage restrictions on the token (domain restrictions, rate limits) for security
-4. Use environment variables to store the Mapbox token:
-
-   a. Create a `.env` file in the root of the project (if it doesn't exist):
-   ```
-   REACT_APP_MAPBOX_TOKEN=your_mapbox_token_here
-   ```
-
-   b. Add `.env` to your `.gitignore` file to prevent committing sensitive tokens
-   ```
-   # .gitignore
-   .env
-   .env.local
-   .env.development.local
-   .env.test.local
-   .env.production.local
-   ```
-
-   c. Update the Map component to use the environment variable:
-   ```javascript
-   
-   // With:
-   const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN;
-   ```
-
-5. For production deployment, set the environment variable on your hosting platform:
-   - Netlify: Add environment variable in Site settings > Build & deploy > Environment
-   - Vercel: Add environment variable in Project settings > Environment Variables
-   - Traditional hosting: Set environment variables in your server configuration
-
-### 4. Frontend Map Integration
-
-1. Modify the map component to fetch data from the API instead of the static file:
-   ```javascript
-   // Replace this in Map.js:
-   import locations from '../data/locations';
-   
-   // With:
-   const [locations, setLocations] = useState([]);
-   
-   useEffect(() => {
-     fetch('https://your-domain.com/api/locations')
-       .then(response => response.json())
-       .then(data => setLocations(data))
-       .catch(error => console.error('Error fetching locations:', error));
-   }, []);
-   ```
-
-2. Add error handling and loading states to the map component:
-   ```javascript
-   const [loading, setLoading] = useState(true);
-   const [error, setError] = useState(null);
-   
-   useEffect(() => {
-     setLoading(true);
-     fetch('https://your-domain.com/api/locations')
-       .then(response => response.json())
-       .then(data => {
-         setLocations(data);
-         setLoading(false);
-       })
-       .catch(error => {
-         console.error('Error fetching locations:', error);
-         setError(error);
-         setLoading(false);
-       });
-   }, []);
-   
-   // Add conditional rendering in the return statement
-   if (loading) return <div className="loading-spinner">Loading map data...</div>;
-   if (error) return <div className="error-message">Error loading map: {error.message}</div>;
-   ```
-
-### 5. Component Embedding
-
-1. Build the React application for production:
-   ```
-   npm run build
-   ```
-
-2. Embed the built application in the Prima-CB website using one of these methods:
-   
-   a. **IFrame Integration:**
-   ```html
-   <iframe 
-     src="https://path-to-hosted-interactive-map" 
-     title="Prima-CB Interactive Map" 
-     width="100%" 
-     height="600px" 
-     frameborder="0"
-   ></iframe>
-   ```
-   
-   b. **Direct Script Integration:**
-   Include the built JavaScript bundles directly in a dedicated page:
-   ```html
-   <div id="prima-map-root"></div>
-   <script src="path-to-built-react-app/static/js/main.[hash].js"></script>
-   ```
-   
-   c. **Module Federation (Advanced):**
-   If both the main site and map are React-based, implement module federation for seamless integration.
-
-### 6. Testing and Deployment
-
-1. Test the API integration in a staging environment
-2. Ensure that the admin interface properly updates the map data
-3. Test the map component with real-time data updates
-4. Deploy to production when all tests pass
-
-## Original Project Notes
-
-### Using the Location Sharing Feature
-
-The application includes a location sharing feature that helps users see both their current location and sculpture locations on the map:
-
-1. Click the "Share My Location" button in the top-right corner of the map.
-2. Allow the browser to access your location when prompted.
-3. The map will automatically adjust to show:
-   - If a sculpture is already selected: Both your location and the selected sculpture in the same view
-   - If no sculpture is selected: Your location and the nearest sculpture
-   - If no sculptures are available: Just your location
-
-### Current Data Structure
-
-The current location data structure in `src/data/locations.js` should be maintained in the API responses:
-
-```javascript
-{
-  id: 1,
-  name: {
-    en: "Location Name",
-    fr: "Nom de l'emplacement"
-  },
-  description: {
-    en: "Description text...",
-    fr: "Texte de description..."
-  },
-  artist: "Artist Name", // For artwork locations
-  year: "Year",
-  dimensions: "Dimensions",
-  materials: {
-    en: "Materials used",
-    fr: "Matériaux utilisés"
-  },
-  longitude: 0.0000, // Replace with actual coordinates
-  latitude: 0.0000,  // Replace with actual coordinates
-  image: "URL to image",
-  video: "URL to video for second slide",
-  artist_details: {
-    photo: "URL to artist photo",
-    school: "Artist's school or institution",
-    location: "Artist's base location",
-    website: "https://artist-website.com"
+export default {
+  components: {
+    MapComponent
   }
 }
 ```
 
-## License
+### Method 2: Build as Standalone
 
-[Specify license or copyright information] 
+You can also build this project as a standalone application and embed it via iframe:
+
+1. Run `npm run build`
+2. Host the generated files in the `dist` directory on your server
+3. Embed using an iframe in your website:
+
+```html
+<iframe 
+  src="https://your-hosting-url/prima-map/" 
+  width="100%" 
+  height="600" 
+  frameborder="0"
+></iframe>
+```
+
+## Features
+
+- Interactive map showing locations in Prima Cabourg park
+- Location details with image galleries and artist information
+- Multilingual support (English/French)
+- User location tracking and navigation
+- Mobile responsive design
+
+## Vue.js Resources for Beginners
+
+If you're new to Vue.js, here are some helpful resources to get started:
+
+- [Vue.js Official Documentation](https://vuejs.org/guide/introduction.html)
+- [Vue CLI Documentation](https://cli.vuejs.org/)
+- [Vue Mastery - Beginner Courses](https://www.vuemastery.com/courses/)
+- [Vue School](https://vueschool.io/)
+
+## Vue Project Structure
+
+```
+vue-implementation/
+│
+├── public/              # Static assets that will be copied directly to build
+│
+├── src/                 # Source files
+│   ├── components/      # Vue components
+│   │   ├── MapComponent.vue   # Main map component
+│   │   └── Map.css            # Map styles
+│   │
+│   ├── data/            # Data files, including locations.js
+│   ├── App.vue          # Root Vue component
+│   └── main.js          # Vue application entry point
+│
+├── .env                 # Environment variables (you need to create this)
+├── package.json         # Project dependencies and scripts
+└── vue.config.js        # Vue configuration
+```
+
+## Customization
+
+The map component uses Mapbox for rendering. You can customize the map style by changing the `mapStyle` property in `MapComponent.vue`. 

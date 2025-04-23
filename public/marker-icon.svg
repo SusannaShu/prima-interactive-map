@@ -1,8 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="24px" height="36px" viewBox="0 0 24 36" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <title>Map Marker</title>
-    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <path d="M12,0 C18.627417,0 24,5.372583 24,12 C24,18.627417 12,36 12,36 C12,36 0,18.627417 0,12 C0,5.372583 5.372583,0 12,0 Z" fill="#000000"></path>
-        <circle fill="#FFFFFF" cx="12" cy="12" r="5"></circle>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
+  <path fill="#333333" d="M15 0c8.3 0 15 6.7 15 15 0 6.9-4.5 12.7-10.7 14.7L15 40l-4.3-10.3C4.5 27.7 0 21.9 0 15 0 6.7 6.7 0 15 0z"/>
+  <circle fill="#FFFFFF" cx="15" cy="15" r="6"/>
 </svg> 
