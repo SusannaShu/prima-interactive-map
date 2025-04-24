@@ -2,6 +2,10 @@
 
 This is a Vue.js implementation of the Prima interactive map, designed to be integrated with the Prima website.
 
+## Live Demo
+
+View the live demo: [https://prima-interactive-map.netlify.app/](https://prima-interactive-map.netlify.app/)
+
 ## Project Setup
 
 ```
