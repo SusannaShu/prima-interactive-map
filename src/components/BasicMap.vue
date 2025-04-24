@@ -403,7 +403,7 @@ export default {
 /* Font definitions */
 @font-face {
   font-family: 'JigsawStencil';
-  src: url('../../../public/fonts/header.otf') format('opentype');
+  src: url('../assets/fonts/header.otf') format('opentype');
   font-weight: bold;
   font-style: normal;
 }
