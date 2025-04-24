@@ -25,9 +25,9 @@ npm run serve
 
 ### Compiles and minifies for production
 
-```
-npm run build
-```
+   ```
+   npm run build
+   ```
 
 ## Integration with Prima Website
 
@@ -57,15 +57,15 @@ You can also build this project as a standalone application and embed it via ifr
 2. Host the generated files in the `dist` directory on your server
 3. Embed using an iframe in your website:
 
-```html
-<iframe 
+   ```html
+   <iframe 
   src="https://your-hosting-url/prima-map/" 
-  width="100%" 
+     width="100%" 
   height="600" 
-  frameborder="0"
-></iframe>
-```
-
+     frameborder="0"
+   ></iframe>
+   ```
+   
 ## Features
 
 - Interactive map showing locations in Prima Cabourg park
