@@ -3,4 +3,20 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "16" 
+  NODE_VERSION = "16"
+
+# Ensure assets are properly cached but HTML isn't
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable" 
