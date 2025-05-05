@@ -576,12 +576,11 @@ export default {
   right: 0;
   bottom: 0;
   padding: 30px;
-  color: white;
+  color: white; /* Restore white text for main overlay */
   text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: flex-start; /* Move text to top */
-  background: linear-gradient(rgba(0,0,0,0.7), transparent, transparent); /* Top shadow only */
 }
 
 .popup-overlay h3 {
@@ -589,6 +588,7 @@ export default {
   font-family: 'JigsawStencil', sans-serif;
   font-size: 50.667px; /* 38pt converted to px */
   font-weight: bold;
+  color: white; /* Ensure heading is white */
   letter-spacing: 1px;
   line-height: 0.9;
   text-align: left;
@@ -598,6 +598,7 @@ export default {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 26.667px; /* 20pt converted to px */
   font-weight: normal;
+  color: white; /* Ensure artist name list is white */
   line-height: 1;
   opacity: 0.9;
   text-align: left;
@@ -683,34 +684,32 @@ export default {
 /* Artist slide styling */
 .popup-slide.artist-info {
   background: white;
+  position: relative; /* Needed for absolute positioning of text */
 }
 
 .artist-container {
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start; /* Left align content */
-  text-align: left;
-  height: 100%;
-  overflow-y: auto;
-  justify-content: flex-end; /* Bottom align content */
-  box-sizing: border-box;
+  position: relative; /* Container for image and text overlay */
+  width: 100%;
+  overflow: hidden;
 }
 
 .artist-info-image {
-  width: 265px;
-  height: 370px; /* Rectangular shape as per design */
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  margin: 0 0 10px 0; /* Reduced margin */
-  margin-bottom: 20px;
-  border-radius: 0; /* Remove border radius */
 }
 
 .artist-info-text {
-  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30px;
+  color: #333; /* Keep dark text for artist slides */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  text-align: left;
 }
 
 /* Artist info slide styling - updated to match design exactly */
@@ -729,6 +728,7 @@ export default {
   font-size: 33.333px; /* 25pt converted to px */
   font-weight: 700; /* Bold */
   line-height: 1;
+  color: #333;
   margin-bottom: 5px;
   text-align: left;
   text-transform: uppercase;
