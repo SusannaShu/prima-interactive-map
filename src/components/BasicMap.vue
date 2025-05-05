@@ -137,6 +137,7 @@ export default {
       userLocation: null,
       selectedLocation: null,
       currentSlide: 0,
+      hoverPopup: null,
       locationText: {
         en: {
           button: 'Share your location',
@@ -243,6 +244,36 @@ export default {
           .setLngLat([location.longitude, location.latitude])
           .addTo(this.map)
         
+        // Add hover events for image popup
+        markerEl.addEventListener('mouseenter', () => {
+          // Ensure previous hover popup is removed
+          if (this.hoverPopup) {
+            this.hoverPopup.remove();
+            this.hoverPopup = null;
+          }
+          
+          // Don't show hover popup if the main popup for this location is already open
+          if (this.selectedLocation && this.selectedLocation.id === location.id) {
+            return;
+          }
+
+          this.hoverPopup = new window.mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            offset: 25 // Offset from marker center
+          })
+            .setLngLat(marker.getLngLat())
+            .setHTML(`<img src="${location.image}" alt="${this.getText(location.name)}" style="width: 150px; height: auto; display: block; border-radius: 4px;">`)
+            .addTo(this.map);
+        });
+
+        markerEl.addEventListener('mouseleave', () => {
+          if (this.hoverPopup) {
+            this.hoverPopup.remove();
+            this.hoverPopup = null;
+          }
+        });
+        
         // Add click event to marker
         markerEl.addEventListener('click', () => {
           this.handleMarkerClick(location)
@@ -253,6 +284,12 @@ export default {
     },
     
     handleMarkerClick(location) {
+      // Close any existing hover popup when clicking a marker
+      if (this.hoverPopup) {
+        this.hoverPopup.remove();
+        this.hoverPopup = null;
+      }
+      
       this.selectedLocation = location
       this.currentSlide = 0  // Reset to first slide
       
@@ -274,11 +311,17 @@ export default {
       this.error = null
       
       navigator.geolocation.getCurrentPosition(
-        position => {
+        //position => {
+        () => {
           this.loading = false
+          // --- Emulation: Use fixed location instead of real location ---
+          const simulatedLatitude = 50.8373234;
+          const simulatedLongitude = 1.7192430;
           this.userLocation = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
+            //latitude: position.coords.latitude,
+            //longitude: position.coords.longitude
+            latitude: simulatedLatitude,
+            longitude: simulatedLongitude
           }
           
           // Define the center of the artwork installations area
@@ -396,6 +439,17 @@ export default {
     
     goToSlide(index) {
       this.currentSlide = index;
+    },
+    
+    // Method to close the main popup and potentially clear hover state
+    closeMainPopup() {
+      this.selectedLocation = null;
+      // It might be good practice to ensure hover popup is gone, 
+      // though mouseleave should handle it.
+      if (this.hoverPopup) {
+        this.hoverPopup.remove();
+        this.hoverPopup = null;
+      }
     },
     
     // Helper method to get text in current language
@@ -675,7 +729,7 @@ export default {
   font-size: 16px; /* 12pt converted to px */
   font-weight: normal;
   line-height: 1.2;
-  margin: 10px 0 0 0;
+  margin: 30px 0 0 0; /* Increased top margin */
   text-align: left;
   color: #333;
   max-width: 100%;
