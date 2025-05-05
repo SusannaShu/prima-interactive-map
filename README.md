@@ -18,7 +18,7 @@ Create a `.env` file in the root directory with:
 
 ```
 VUE_APP_MAPBOX_TOKEN=your_mapbox_access_token
-VUE_APP_API_URL=your_api_url (for backend integration)
+VUE_APP_API_URL=your_api_url (optional, for backend integration)
 ```
 
 ### Compiles and hot-reloads for development
@@ -35,31 +35,51 @@ npm run build
 
 ## Integration with Prima Website
 
-### Method 1: Component Integration with Existing Vue Site
+This map can be integrated into an existing website (like Prima's) in a couple of ways:
 
-To integrate this map component into Prima's existing Vue.js application:
+### Method 1: iFrame Integration (Simplest)
 
-1. Copy the required files into your project:
-   - `src/components/BasicMap.vue` 
-   - `src/assets/fonts/` directory (or ensure the fonts are available)
-   
-2. Create an API service to connect to your backend:
-   ```js
-   // src/services/mapService.js
-   import axios from 'axios';
-   
-   const API_URL = process.env.VUE_APP_API_URL;
-   
-   export default {
-     getLocations() {
-       return axios.get(`${API_URL}/map-locations`);
-     },
-     // Add other API methods as needed
-   };
-   ```
+1.  Deploy this Vue application to a host (like Netlify, Vercel, or your own server).
+2.  Embed the map in your Prima site using an `<iframe>`:
+    ```html
+    <iframe 
+      src="https://your-deployed-map-url.com" 
+      width="100%" 
+      height="600px" 
+      style="border:none;"
+      title="Prima Interactive Map"
+    ></iframe>
+    ```
+    *Adjust `width`, `height`, and `src` accordingly.*
 
-3. Import and use the component in your Vue application:
-   ```js
+### Method 2: Component Integration (If Prima site uses Vue)
+
+If Prima's main website already uses Vue.js, you can integrate the `BasicMap.vue` component directly:
+
+1.  **Copy Files:**
+    *   Copy `src/components/BasicMap.vue` into your Prima project's components directory.
+    *   Copy the fonts from `src/assets/fonts/` or ensure equivalent fonts are loaded.
+    *   Copy the marker icon (`public/marker-icon.svg`) to your public assets folder.
+    *   Copy the location data `src/data/locations.js` or set up an API service (see below).
+
+2.  **Install Dependencies:** Ensure your main project has `mapbox-gl` installed if it doesn't already.
+
+3.  **Environment Variable:** Make sure the `VUE_APP_MAPBOX_TOKEN` is set in your main project's `.env` file.
+
+4.  **Import and Use:**
+    ```vue
+    <template>
+      <div>
+        <!-- Other Prima site content -->
+        <BasicMap 
+          :language="currentLanguage" 
+          @language-change="handleLanguageChange" 
+        />
+        <!-- Other Prima site content -->
+      </div>
+    </template>
+
+    <script>
    import BasicMap from './path/to/BasicMap.vue';
    
    export default {
@@ -68,136 +88,91 @@ To integrate this map component into Prima's existing Vue.js application:
      },
      data() {
        return {
-         language: 'en'
-       }
+          // Assuming Prima site manages language state
+          currentLanguage: 'en' 
+        };
      },
      methods: {
-       setLanguage(lang) {
-         this.language = lang;
-       }
-     }
-   }
+        handleLanguageChange(newLang) {
+          this.currentLanguage = newLang;
+          // Potentially update language globally in Prima site
+        }
+      }
+    };
+    </script>
    ```
 
-4. Use the component in your template:
-   ```html
-   <BasicMap 
-     :language="language" 
-     @language-change="setLanguage" 
-   />
-   ```
+### Optional: Backend API Integration
 
-### Method 2: Backend API Integration
+Instead of using the static `src/data/locations.js`, you can fetch data from Prima's backend:
 
-To connect the map with Prima's admin backend instead of using static data:
+1.  **Backend Endpoints:** Ensure your backend provides an endpoint, e.g., `GET /api/map-locations`, that returns location data matching the schema defined below.
 
-1. Create the following API endpoints in your backend:
-   - `GET /api/map-locations` - Retrieve all locations
-   - `GET /api/map-locations/:id` - Retrieve a specific location
-   - `POST /api/map-locations` - Create a new location
-   - `PUT /api/map-locations/:id` - Update a location
-   - `DELETE /api/map-locations/:id` - Delete a location
-   - `POST /api/upload` - Upload media files (images/videos)
+2.  **Modify `BasicMap.vue`:**
+    *   Remove the static import: `// import locations from '../data/locations';`
+    *   Add logic to fetch data in the `mounted` or `created` hook:
+        ```javascript
+        import axios from 'axios'; // Or your preferred HTTP client
 
-2. Modify the `BasicMap.vue` component to fetch data from your API:
-   ```js
-   // In the script section of BasicMap.vue
-   import mapService from '@/services/mapService';
-   
-   // Replace the static import
-   // import locations from '../data/locations';
-   
-   export default {
+        // ... inside export default {
      data() {
        return {
-         // ...existing data properties
-         locations: [],
+              // ... other data properties
+              artLocations: [], // Initialize as empty
          loading: true,
-         error: null
+              error: null,
+              // ... hoverPopup, etc.
        };
      },
-     
-     async created() {
-       try {
-         const response = await mapService.getLocations();
-         this.locations = response.data;
-         this.loading = false;
-         
-         // Initialize map after locations are loaded
-         this.loadMapboxScript().then(() => {
-           this.initializeMap();
+          mounted() {
+            this.loadMapboxScript()
+              .then(() => {
+                // Mapbox script loaded, now fetch locations
+                this.fetchLocations(); 
+              })
+              .catch(error => {
+                this.error = `Error loading map library: ${error.message}`;
+                this.loading = false;
+              });
+          },
+          methods: {
+            async fetchLocations() {
+              this.loading = true;
+              this.error = null;
+              try {
+                // Adjust URL as needed
+                const response = await axios.get(process.env.VUE_APP_API_URL || '/api/map-locations'); 
+                this.artLocations = response.data;
+                this.initializeMap(); // Initialize map AFTER data is fetched
+                // Note: Map initialization might need adjustments if called here
+                // Ensure map instance exists before adding markers
+                if (this.map) {
            this.addMarkers();
-         });
-       } catch (error) {
-         this.error = 'Failed to load map data';
+                } else {
+                    // Handle case where map isn't ready yet (e.g., wait for 'load' event)
+                    this.map.on('load', this.addMarkers);
+                }
+              } catch (err) {
+                this.error = 'Failed to load location data.';
+                console.error('Error fetching locations:', err);
+              } finally {
          this.loading = false;
-         console.error('Error loading locations:', error);
        }
-     }
-     
-     // ...rest of component
-   };
-   ```
-
-### Method 3: Admin Panel Integration
-
-For a complete admin panel to manage locations:
-
-1. Create admin components for managing locations:
-   - `LocationsList.vue` - List and manage all locations
-   - `LocationEditor.vue` - Add/edit location details
-   - `MapPicker.vue` - Visual location picker using Mapbox
-
-2. Ensure your backend provides proper API endpoints (as listed above)
-
-3. Sample code for a location editor form:
-   ```html
-   <template>
-     <div class="location-editor">
-       <h2>{{ isEditing ? 'Edit' : 'Add' }} Location</h2>
-       
-       <form @submit.prevent="saveLocation">
-         <!-- Basic fields -->
-         <div class="form-group">
-           <label>Name (English)</label>
-           <input v-model="location.name.en" required />
-         </div>
-         
-         <div class="form-group">
-           <label>Name (French)</label>
-           <input v-model="location.name.fr" required />
-         </div>
-         
-         <!-- Other fields for artist, year, dimensions, materials, etc. -->
-         
-         <!-- Coordinates -->
-         <div class="form-group">
-           <label>Coordinates</label>
-           <div class="coordinates-inputs">
-             <input v-model.number="location.longitude" placeholder="Longitude" required />
-             <input v-model.number="location.latitude" placeholder="Latitude" required />
-           </div>
-         </div>
-         
-         <!-- File uploads -->
-         <div class="form-group">
-           <label>Image</label>
-           <input type="file" @change="handleImageUpload" />
-         </div>
-         
-         <button type="submit">Save</button>
-       </form>
-     </div>
-   </template>
-   ```
+            },
+            // ... other methods like initializeMap, addMarkers, etc.
+          }
+        // ... rest of component
+        ```
+    *   Ensure `initializeMap` and `addMarkers` are called appropriately *after* the data has been successfully fetched.
 
 ## Data Schema
 
-Your backend should implement this data structure for locations:
+The map component expects location data (either from `locations.js` or an API) in the following format:
 
 ```javascript
+[
 {
-  id: Number,
+    id: Number, // Unique identifier
   name: {
     en: String,
     fr: String
@@ -206,7 +181,6 @@ Your backend should implement this data structure for locations:
     en: String,
     fr: String
   },
-  artist: String,
   year: String,
   dimensions: String,
   materials: {
@@ -215,50 +189,91 @@ Your backend should implement this data structure for locations:
   },
   longitude: Number,
   latitude: Number,
-  image: String, // URL to image
-  video: String, // URL to video (optional)
-  artist_details: {
-    photo: String, // URL to artist photo
+    image: String, // URL to the main installation image
+    artists: [ // Array of artist objects
+      {
+        name: String,
+        photo: String, // URL to the artist's photo
     school: String,
-    location: String,
-    website: String
+        location: { // Artist's location (can be multilingual)
+          en: String,
+          fr: String
+        },
+        website: String // Artist's website or social media handle
+      }
+      // ... potentially more artists
+    ]
   }
-}
+  // ... more location objects
+]
 ```
 
 ## Deployment 
 
-### Netlify Deployment
+This project is configured for easy deployment on Netlify.
 
-1. Add a `netlify.toml` file to your project:
+### Netlify Configuration
+
+The `netlify.toml` file in the root directory configures the build process:
+
    ```toml
    [build]
-     command = "npm run build"
-     publish = "dist"
+  command = "npm run build" # Build command
+  publish = "dist"          # Directory to publish
    
    [build.environment]
-     NODE_VERSION = "16"
+  NODE_VERSION = "16"       # Specify Node.js version
    
-   # For SPA routing
+# Required for Single Page Applications (SPA) like Vue
    [[redirects]]
      from = "/*"
      to = "/index.html"
      status = 200
    ```
 
-2. Add a `_redirects` file in the public directory:
-   ```
-   /* /index.html 200
-   ```
+Push your code to a Git repository (GitHub, GitLab, Bitbucket) and connect it to Netlify. Ensure you set the `VUE_APP_MAPBOX_TOKEN` environment variable in your Netlify site settings.
 
 ## Features
 
-- Interactive map showing locations in Prima park
-- Location details with image galleries and artist information
-- Multilingual support (English/French)
-- User location tracking and navigation
-- Mobile responsive design
-- Backend API integration for dynamic content management
+*   Interactive map displaying art installations using Mapbox GL JS.
+*   Custom map markers.
+*   Marker hover previews showing the installation image.
+*   Clickable markers opening a detailed popup.
+*   Multi-slide popup showing:
+    *   Installation image and title.
+    *   Installation details (year, materials, dimensions, description).
+    *   Artist details (photo, name, school, location, website) - supports multiple artists per installation with one slide per artist.
+*   Multilingual support (English/French) for text content, switchable via UI buttons.
+*   "Share your location" button to show user's position on the map (currently uses emulated location for testing).
+*   Highlights nearest installations when user location is shared.
+*   Responsive design for desktop and mobile.
+
+## Vue Project Structure
+
+```
+prima-interactive-map/
+├── public/              # Static assets (index.html, favicon, marker-icon.svg)
+│
+├── src/
+│   ├── assets/          # Processed assets (fonts)
+│   │   └── BasicMap.vue   # <<<< The main map component >>>>
+│   ├── data/            # Static data
+│   │   └── locations.js # Default location data
+│   ├── App.vue          # Root Vue component (loads BasicMap)
+│   └── main.js          # Application entry point
+│
+├── .env                 # Local environment variables (requires VUE_APP_MAPBOX_TOKEN)
+├── .env.example         # Example environment variables
+├── netlify.toml         # Netlify deployment configuration
+├── package.json         # Project dependencies and scripts
+└── vue.config.js        # Vue CLI configuration
+```
+
+## Customization
+
+The map style can be changed by modifying the `style` option in the `mapboxgl.Map` constructor within the `initializeMap` method in `src/components/BasicMap.vue`.
+
+Mapbox offers various base styles, or you can create your own using Mapbox Studio.
 
 ## Vue.js Resources for Beginners
 

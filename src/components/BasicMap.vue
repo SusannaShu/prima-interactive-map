@@ -118,7 +118,8 @@
 </template>
 
 <script>
-import locations from '../data/locations';
+//import locations from '../data/locations';
+import contentfulClient from '@/services/contentfulService';
 
 export default {
   name: 'BasicMap',
@@ -152,7 +153,7 @@ export default {
           loading: 'Cargando...'
         }
       },
-      artLocations: locations // Use the imported locations data directly
+      artLocations: [],
     };
   },
   computed: {
@@ -173,14 +174,102 @@ export default {
     // Load Mapbox GL JS dynamically
     this.loadMapboxScript()
       .then(() => {
-        this.initializeMap()
-        this.addMarkers() // Call addMarkers directly since we have the data
+        // Mapbox script loaded, now fetch locations from Contentful
+        this.fetchLocations();
       })
       .catch(error => {
-        this.error = `Error loading map: ${error.message}`
+        this.error = `Error loading map library: ${error.message}`;
+        this.loading = false; // Ensure loading state is handled on script load error
       })
   },
   methods: {
+    async fetchLocations() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await contentfulClient.getEntries({
+          content_type: 'artInstallation', // Use the Content Type ID from Contentful
+          include: 2 // Include linked artists (depth 2 for artist fields)
+        });
+
+        console.log('Raw Contentful response items:', response.items);
+
+        // Transform Contentful data into the format the component expects
+        this.artLocations = this.transformContentfulData(response.items);
+
+        console.log('Transformed artLocations data:', this.artLocations);
+
+        // Initialize map AFTER data is fetched and transformed
+        this.initializeMap();
+
+        // Wait for map to load before adding markers
+        // Use an event listener as initializeMap might be async implicitly
+        this.map.on('load', () => {
+          this.addMarkers();
+          this.map.resize(); // Ensure map resizes correctly after setup
+        });
+
+      } catch (err) {
+        this.error = 'Failed to load location data from Contentful.';
+        console.error('Error fetching Contentful entries:', err);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // Add a new method to transform the data
+    transformContentfulData(items) {
+      return items.map(item => { // Outer map for each installation entry
+        const fields = item.fields;
+
+        // Helper to safely get localized field, returning the {en, fr} structure
+        const getLocalizedField = (field) => {
+          if (typeof field === 'object' && field !== null) {
+            // Handles object like { 'en-US': 'English', 'fr': 'French' }
+            return {
+              en: field['en-US'] || field['en'] || '', // Prioritize en-US, fallback to en
+              fr: field['fr'] || '',
+            };
+          } else if (typeof field === 'string') {
+            // Handles case where only one locale value is returned directly as a string
+            return { en: field, fr: '' }; // Assume default locale (en)
+          }
+          return { en: '', fr: '' }; // Default fallback
+        };
+
+        const transformed = { // Start building the transformed object for this installation
+          id: item.sys.id,
+          name: getLocalizedField(fields.name),
+          description: getLocalizedField(fields.description),
+          year: fields.year || '',
+          dimensions: fields.dimensions || '',
+          materials: getLocalizedField(fields.materials),
+          longitude: fields.coordinates?.lon || 0, // Access lon/lat from the resolved coordinates object
+          latitude: fields.coordinates?.lat || 0,
+          // Access the resolved linked asset's fields for the main image URL
+          image: fields.mainImage?.fields?.file?.url ? `https:${fields.mainImage.fields.file.url}` : '',
+          // Map through the array of resolved linked artist entries
+          artists: fields.artists ? fields.artists.map(artist => { // Inner map for each artist entry
+            const artistFields = artist.fields; // Access fields of the resolved artist entry
+            if (!artistFields) {
+                return null; // Safety check
+            }
+            return { // Build the transformed artist object
+              name: artistFields.name || '',
+              // Access the resolved linked asset's fields for the artist photo URL
+              photo: artistFields.photo?.fields?.file?.url ? `https:${artistFields.photo.fields.file.url}` : '',
+              school: artistFields.school || '',
+              // Location was likely set up as localized in Contentful model, use helper
+              location: getLocalizedField(artistFields.location),
+              website: artistFields.website || '...'
+            };
+          }).filter(artist => artist !== null) : [] // Filter out any nulls and ensure it's always an array
+        };
+
+        return transformed; // End of transformed installation object
+      });
+    },
+
     async loadMapboxScript() {
       return new Promise((resolve, reject) => {
         if (window.mapboxgl) {
@@ -456,7 +545,8 @@ export default {
     getText(textObj) {
       if (!textObj) return ''
       if (typeof textObj === 'string') return textObj
-      return textObj[this.language] || textObj.en || ''
+      // Handle Contentful's localized object structure
+      return textObj[this.language] || textObj['en'] || textObj['en-US'] || '' // Added 'en-US' fallback
     },
     
     // Method to change language
@@ -738,32 +828,34 @@ export default {
 /* Artist slide styling */
 .popup-slide.artist-info {
   background: white;
-  position: relative; /* Needed for absolute positioning of text */
 }
 
 .artist-container {
-  position: relative; /* Container for image and text overlay */
-  width: 100%;
-  overflow: hidden;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Align items to the left */
+  text-align: left;
+  height: 100%;
+  overflow-y: auto; /* Allow scrolling if content overflows */
+  justify-content: flex-start; /* Align content to the top */
+  box-sizing: border-box;
 }
 
 .artist-info-image {
-  width: 100%;
-  height: 100%;
+  width: 285px; /* Specific width */
+  height: 380px; /* Specific height */
   object-fit: cover;
+  margin-bottom: 20px; /* Space below image */
 }
 
 .artist-info-text {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 30px;
-  color: #333; /* Keep dark text for artist slides */
+  width: 100%; /* Take available width */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
+  color: #333; /* Ensure text is dark */
 }
 
 /* Artist info slide styling - updated to match design exactly */
@@ -783,7 +875,8 @@ export default {
   font-weight: 700; /* Bold */
   line-height: 1;
   color: #333;
-  margin-bottom: 5px;
+  margin-top: 5px; /* Added top margin */
+  margin-bottom: 5px; /* name styling looks okay */
   text-align: left;
   text-transform: uppercase;
 }
