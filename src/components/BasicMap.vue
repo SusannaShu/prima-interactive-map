@@ -48,7 +48,9 @@
           />
           <div class="popup-overlay">
             <h3>{{ getText(selectedLocation.name) }}</h3>
-            <div v-if="selectedLocation.artist" class="artist">{{ selectedLocation.artist }}</div>
+            <div v-if="selectedLocation.artists && selectedLocation.artists.length > 0" class="artist">
+              {{ selectedLocation.artists.map(artist => artist.name).join(', ') }}
+            </div>
           </div>
         </div>
       </div>
@@ -67,23 +69,23 @@
         </div>
       </div>
       
-      <!-- Slide 3: Artist info -->
-      <div v-if="currentSlide === 2 && selectedLocation.artist_details" class="popup-slide artist-info">
-        <div class="artist-container">
+      <!-- Slides 3+: Artist info (one per artist) -->
+      <div v-if="currentSlide >= 2 && selectedLocation.artists && selectedLocation.artists.length > 0" class="popup-slide artist-info">
+        <div v-if="artistDetails" class="artist-container">
           <img 
-            v-if="selectedLocation.artist_details.photo" 
-            :src="selectedLocation.artist_details.photo" 
-            :alt="selectedLocation.artist"
+            v-if="artistDetails.photo" 
+            :src="artistDetails.photo" 
+            :alt="artistDetails.name"
             class="artist-info-image"
           />
           <div class="artist-info-text">
-            <div v-if="selectedLocation.artist_details.website" class="website">
-              {{ selectedLocation.artist_details.website.replace(/^https?:\/\//, '') }}
+            <div v-if="artistDetails.website && artistDetails.website !== '...'" class="website">
+              {{ artistDetails.website.replace(/^https?:\/\//, '') }}
             </div>
-            <div class="name">{{ selectedLocation.artist }}</div>
+            <div class="name">{{ artistDetails.name }}</div>
             <div class="details">
-              <div class="school">{{ selectedLocation.artist_details.school }}</div>
-              <div class="location">{{ selectedLocation.artist_details.location }}</div>
+              <div class="school">{{ artistDetails.school }}</div>
+              <div class="location">{{ getText(artistDetails.location) }}</div>
             </div>
           </div>
         </div>
@@ -104,7 +106,7 @@
       <!-- Slide indicators -->
       <div class="popup-dots">
         <button 
-          v-for="n in (selectedLocation.artist_details ? 3 : 2)" 
+          v-for="n in totalSlides" 
           :key="n-1"
           :class="['popup-dot', { active: currentSlide === n-1 }]"
           @click="goToSlide(n-1)"
@@ -151,6 +153,20 @@ export default {
       },
       artLocations: locations // Use the imported locations data directly
     };
+  },
+  computed: {
+    totalSlides() {
+      if (!this.selectedLocation) return 0;
+      const artistCount = this.selectedLocation.artists ? this.selectedLocation.artists.length : 0;
+      return 2 + artistCount; // 2 base slides + 1 per artist
+    },
+    artistDetails() {
+      if (!this.selectedLocation || !this.selectedLocation.artists || this.currentSlide < 2) {
+        return null;
+      }
+      const artistIndex = this.currentSlide - 2; // Artists start from slide index 2
+      return this.selectedLocation.artists[artistIndex] || null;
+    }
   },
   mounted() {
     // Load Mapbox GL JS dynamically
@@ -369,17 +385,17 @@ export default {
     
     // Slideshow navigation methods
     nextSlide() {
-      const maxSlides = this.selectedLocation.artist ? 3 : 2
-      this.currentSlide = (this.currentSlide + 1) % maxSlides
+      const maxSlides = this.totalSlides;
+      this.currentSlide = (this.currentSlide + 1) % maxSlides;
     },
     
     prevSlide() {
-      const maxSlides = this.selectedLocation.artist ? 3 : 2
-      this.currentSlide = (this.currentSlide - 1 + maxSlides) % maxSlides
+      const maxSlides = this.totalSlides;
+      this.currentSlide = (this.currentSlide - 1 + maxSlides) % maxSlides;
     },
     
     goToSlide(index) {
-      this.currentSlide = index
+      this.currentSlide = index;
     },
     
     // Helper method to get text in current language
