@@ -18,7 +18,8 @@ Create a `.env` file in the root directory with:
 
 ```
 VUE_APP_MAPBOX_TOKEN=your_mapbox_access_token
-VUE_APP_API_URL=your_api_url (optional, for backend integration)
+VUE_APP_CONTENTFUL_SPACE_ID=your_contentful_space_id
+VUE_APP_CONTENTFUL_ACCESS_TOKEN=your_contentful_delivery_api_token
 ```
 
 ### Compiles and hot-reloads for development
@@ -32,6 +33,20 @@ npm run serve
 ```
 npm run build
 ```
+
+## Data Management with Contentful
+
+The map is designed to fetch its location data from Contentful, a headless Content Management System (CMS). This allows for easy updates to art installations and artist information by non-technical users through a web interface.
+
+1.  **Contentful Setup:**
+    *   A Contentful space is set up with two main Content Types: `Art Installation` and `Artist`.
+    *   Refer to the [Contentful Update Guide](./docs/updating-contentful-guide.md) for details on how to manage content.
+2.  **Vue Integration:**
+    *   The `contentful` SDK is used to fetch data.
+    *   API keys (`VUE_APP_CONTENTFUL_SPACE_ID`, `VUE_APP_CONTENTFUL_ACCESS_TOKEN`) are stored in `.env`.
+    *   `src/services/contentfulService.js` initializes the Contentful client.
+    *   `src/components/BasicMap.vue` fetches and transforms data in its `mounted` hook and `fetchLocations`/`transformContentfulData` methods.
+    *   The static `src/data/locations.js` is no longer the primary data source but can be used as a fallback or for initial development if Contentful is not yet configured.
 
 ## Integration with Prima Website
 
@@ -58,13 +73,13 @@ If Prima's main website already uses Vue.js, you can integrate the `BasicMap.vue
 
 1.  **Copy Files:**
     *   Copy `src/components/BasicMap.vue` into your Prima project's components directory.
+    *   Copy `src/services/contentfulService.js`.
     *   Copy the fonts from `src/assets/fonts/` or ensure equivalent fonts are loaded.
     *   Copy the marker icon (`public/marker-icon.svg`) to your public assets folder.
-    *   Copy the location data `src/data/locations.js` or set up an API service (see below).
 
-2.  **Install Dependencies:** Ensure your main project has `mapbox-gl` installed if it doesn't already.
+2.  **Install Dependencies:** Ensure your main project has `mapbox-gl` and `contentful` installed.
 
-3.  **Environment Variable:** Make sure the `VUE_APP_MAPBOX_TOKEN` is set in your main project's `.env` file.
+3.  **Environment Variable:** Make sure the `VUE_APP_MAPBOX_TOKEN`, `VUE_APP_CONTENTFUL_SPACE_ID`, and `VUE_APP_CONTENTFUL_ACCESS_TOKEN` are set in your main project's `.env` file.
 
 4.  **Import and Use:**
     ```vue
@@ -80,19 +95,19 @@ If Prima's main website already uses Vue.js, you can integrate the `BasicMap.vue
     </template>
 
     <script>
-   import BasicMap from './path/to/BasicMap.vue';
-   
-   export default {
-     components: {
-       BasicMap
-     },
-     data() {
-       return {
+    import BasicMap from './path/to/BasicMap.vue';
+
+    export default {
+      components: {
+        BasicMap
+      },
+      data() {
+        return {
           // Assuming Prima site manages language state
           currentLanguage: 'en' 
         };
-     },
-     methods: {
+      },
+      methods: {
         handleLanguageChange(newLang) {
           this.currentLanguage = newLang;
           // Potentially update language globally in Prima site
@@ -100,101 +115,38 @@ If Prima's main website already uses Vue.js, you can integrate the `BasicMap.vue
       }
     };
     </script>
-   ```
-
-### Optional: Backend API Integration
-
-Instead of using the static `src/data/locations.js`, you can fetch data from Prima's backend:
-
-1.  **Backend Endpoints:** Ensure your backend provides an endpoint, e.g., `GET /api/map-locations`, that returns location data matching the schema defined below.
-
-2.  **Modify `BasicMap.vue`:**
-    *   Remove the static import: `// import locations from '../data/locations';`
-    *   Add logic to fetch data in the `mounted` or `created` hook:
-        ```javascript
-        import axios from 'axios'; // Or your preferred HTTP client
-
-        // ... inside export default {
-     data() {
-       return {
-              // ... other data properties
-              artLocations: [], // Initialize as empty
-         loading: true,
-              error: null,
-              // ... hoverPopup, etc.
-       };
-     },
-          mounted() {
-            this.loadMapboxScript()
-              .then(() => {
-                // Mapbox script loaded, now fetch locations
-                this.fetchLocations(); 
-              })
-              .catch(error => {
-                this.error = `Error loading map library: ${error.message}`;
-                this.loading = false;
-              });
-          },
-          methods: {
-            async fetchLocations() {
-              this.loading = true;
-              this.error = null;
-              try {
-                // Adjust URL as needed
-                const response = await axios.get(process.env.VUE_APP_API_URL || '/api/map-locations'); 
-                this.artLocations = response.data;
-                this.initializeMap(); // Initialize map AFTER data is fetched
-                // Note: Map initialization might need adjustments if called here
-                // Ensure map instance exists before adding markers
-                if (this.map) {
-           this.addMarkers();
-                } else {
-                    // Handle case where map isn't ready yet (e.g., wait for 'load' event)
-                    this.map.on('load', this.addMarkers);
-                }
-              } catch (err) {
-                this.error = 'Failed to load location data.';
-                console.error('Error fetching locations:', err);
-              } finally {
-         this.loading = false;
-       }
-            },
-            // ... other methods like initializeMap, addMarkers, etc.
-          }
-        // ... rest of component
-        ```
-    *   Ensure `initializeMap` and `addMarkers` are called appropriately *after* the data has been successfully fetched.
+    ```
 
 ## Data Schema
 
-The map component expects location data (either from `locations.js` or an API) in the following format:
+The map component expects location data from Contentful, which is then transformed into the following format (this structure is also a good reference if using a different backend or the static `src/data/locations.js` file as a fallback):
 
 ```javascript
 [
-{
-    id: Number, // Unique identifier
-  name: {
-    en: String,
-    fr: String
-  },
-  description: {
-    en: String,
-    fr: String
-  },
-  year: String,
-  dimensions: String,
-  materials: {
-    en: String,
-    fr: String
-  },
-  longitude: Number,
-  latitude: Number,
-    image: String, // URL to the main installation image
-    artists: [ // Array of artist objects
+  {
+    id: String, // Contentful Entry ID
+    name: {
+      en: String,
+      fr: String
+    },
+    description: {
+      en: String,
+      fr: String
+    },
+    year: String,
+    dimensions: String,
+    materials: {
+      en: String,
+      fr: String
+    },
+    longitude: Number,
+    latitude: Number,
+    image: String, // URL to the main installation image from Contentful
+    artists: [ // Array of artist objects from Contentful
       {
         name: String,
-        photo: String, // URL to the artist's photo
-    school: String,
+        photo: String, // URL to the artist's photo from Contentful
+        school: String,
         location: { // Artist's location (can be multilingual)
           en: String,
           fr: String
@@ -216,26 +168,26 @@ This project is configured for easy deployment on Netlify.
 
 The `netlify.toml` file in the root directory configures the build process:
 
-   ```toml
-   [build]
+```toml
+[build]
   command = "npm run build" # Build command
   publish = "dist"          # Directory to publish
-   
-   [build.environment]
-  NODE_VERSION = "16"       # Specify Node.js version
-   
-# Required for Single Page Applications (SPA) like Vue
-   [[redirects]]
-     from = "/*"
-     to = "/index.html"
-     status = 200
-   ```
 
-Push your code to a Git repository (GitHub, GitLab, Bitbucket) and connect it to Netlify. Ensure you set the `VUE_APP_MAPBOX_TOKEN` environment variable in your Netlify site settings.
+[build.environment]
+  NODE_VERSION = "16"       # Specify Node.js version
+
+# Required for Single Page Applications (SPA) like Vue
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+Push your code to a Git repository (GitHub, GitLab, Bitbucket) and connect it to Netlify. Ensure you set the `VUE_APP_MAPBOX_TOKEN`, `VUE_APP_CONTENTFUL_SPACE_ID`, and `VUE_APP_CONTENTFUL_ACCESS_TOKEN` environment variables in your Netlify site settings.
 
 ## Features
 
-*   Interactive map displaying art installations using Mapbox GL JS.
+*   Interactive map displaying art installations using Mapbox GL JS, with data managed in Contentful.
 *   Custom map markers.
 *   Marker hover previews showing the installation image.
 *   Clickable markers opening a detailed popup.
@@ -248,7 +200,7 @@ Push your code to a Git repository (GitHub, GitLab, Bitbucket) and connect it to
 *   Highlights nearest installations when user location is shared.
 *   Responsive design for desktop and mobile.
 
-## Vue Project Structure
+## Project Structure
 
 ```
 prima-interactive-map/
@@ -256,14 +208,19 @@ prima-interactive-map/
 │
 ├── src/
 │   ├── assets/          # Processed assets (fonts)
+│   ├── components/      # Vue components
 │   │   └── BasicMap.vue   # <<<< The main map component >>>>
 │   ├── data/            # Static data
-│   │   └── locations.js # Default location data
+│   │   └── locations.js # Fallback/example location data
+│   ├── services/        # API service clients
+│   │   └── contentfulService.js # Contentful client setup
 │   ├── App.vue          # Root Vue component (loads BasicMap)
 │   └── main.js          # Application entry point
 │
-├── .env                 # Local environment variables (requires VUE_APP_MAPBOX_TOKEN)
+├── .env                 # Local environment variables (Mapbox & Contentful tokens)
 ├── .env.example         # Example environment variables
+├── docs/                # Documentation and guides
+│   └── updating-contentful-guide.md # Guide for updating content via Contentful
 ├── netlify.toml         # Netlify deployment configuration
 ├── package.json         # Project dependencies and scripts
 └── vue.config.js        # Vue CLI configuration
@@ -283,28 +240,3 @@ If you're new to Vue.js, here are some helpful resources to get started:
 - [Vue CLI Documentation](https://cli.vuejs.org/)
 - [Vue Mastery - Beginner Courses](https://www.vuemastery.com/courses/)
 - [Vue School](https://vueschool.io/)
-
-## Vue Project Structure
-
-```
-vue-implementation/
-│
-├── public/              # Static assets that will be copied directly to build
-│
-├── src/                 # Source files
-│   ├── components/      # Vue components
-│   │   ├── MapComponent.vue   # Main map component
-│   │   └── Map.css            # Map styles
-│   │
-│   ├── data/            # Data files, including locations.js
-│   ├── App.vue          # Root Vue component
-│   └── main.js          # Vue application entry point
-│
-├── .env                 # Environment variables (you need to create this)
-├── package.json         # Project dependencies and scripts
-└── vue.config.js        # Vue configuration
-```
-
-## Customization
-
-The map component uses Mapbox for rendering. You can customize the map style by changing the `mapStyle` property in `MapComponent.vue`. 
