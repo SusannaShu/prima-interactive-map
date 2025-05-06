@@ -22,7 +22,7 @@ It's recommended to watch this video first for a visual guide.
 
 ## 4. Understanding the Interface
 
-Once logged in and navigated to Spaces -> Prima Interactive Map, the main sections you'll use are:
+Once logged in and navigated to Spaces -> Prima Interactive Map -> Content -> Add Entry, the main sections you'll use are:
 
 *   **Content:** This is where you'll find all the existing entries for Art Installations and Artists.
 *   **Media:** This is where all uploaded images (for installations and artists) are stored.

@@ -72,12 +72,27 @@
       <!-- Slides 3+: Artist info (one per artist) -->
       <div v-if="currentSlide >= 2 && selectedLocation.artists && selectedLocation.artists.length > 0" class="popup-slide artist-info">
         <div v-if="artistDetails" class="artist-container">
-          <img 
-            v-if="artistDetails.photo" 
-            :src="artistDetails.photo" 
-            :alt="artistDetails.name"
-            class="artist-info-image"
-          />
+          <div class="artist-image-wrapper">
+            <img 
+              v-if="artistDetails.photo" 
+              :src="artistDetails.photo" 
+              :alt="artistDetails.name"
+              class="artist-info-image"
+            />
+            <button 
+              v-if="artistDetails.interviewAudioUrl"
+              @click="playInterview(artistDetails.interviewAudioUrl)" 
+              class="play-interview-button"
+              :aria-label="(activeAudioUrl === artistDetails.interviewAudioUrl && isPlayerPlaying) ? 'Pause interview' : 'Play interview'"
+            >
+              <svg v-if="!(activeAudioUrl === artistDetails.interviewAudioUrl && isPlayerPlaying)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                <path fill-rule="evenodd" d="M2 10a8 8 0 1116 0 8 8 0 01-16 0zm6.39-2.908a.75.75 0 01.766.027l3.5 2.25a.75.75 0 010 1.262l-3.5 2.25A.75.75 0 018 12.25V7.75a.75.75 0 01.39-.658z" clip-rule="evenodd" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                <path fill-rule="evenodd" d="M2 10a8 8 0 1116 0 8 8 0 01-16 0zM7 8.75a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5zm5.5 0a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
           <div class="artist-info-text">
             <div v-if="artistDetails.website && artistDetails.website !== '...'" class="website">
               {{ artistDetails.website.replace(/^https?:\/\//, '') }}
@@ -114,6 +129,13 @@
         ></button>
       </div>
     </div>
+    <audio 
+      ref="audioPlayer" 
+      style="display: none;" 
+      @play="onAudioPlay"
+      @pause="onAudioPause"
+      @ended="onAudioEnded"
+    ></audio>
   </div>
 </template>
 
@@ -154,6 +176,8 @@ export default {
         }
       },
       artLocations: [],
+      activeAudioUrl: null, // URL of the currently active/playing audio
+      isPlayerPlaying: false, // Tracks if the audio player is actually playing
     };
   },
   computed: {
@@ -187,17 +211,17 @@ export default {
       this.loading = true;
       this.error = null;
       try {
-        const response = await contentfulClient.getEntries({
+        // Use .withAllLocales before .getEntries to fetch all locales
+        const response = await contentfulClient.withAllLocales
+          .getEntries({
           content_type: 'artInstallation', // Use the Content Type ID from Contentful
           include: 2 // Include linked artists (depth 2 for artist fields)
         });
 
-        console.log('Raw Contentful response items:', response.items);
+        // console.log('Raw Contentful response items:', response.items); // Keep for debugging if needed
 
         // Transform Contentful data into the format the component expects
         this.artLocations = this.transformContentfulData(response.items);
-
-        console.log('Transformed artLocations data:', this.artLocations);
 
         // Initialize map AFTER data is fetched and transformed
         this.initializeMap();
@@ -219,54 +243,73 @@ export default {
 
     // Add a new method to transform the data
     transformContentfulData(items) {
-      return items.map(item => { // Outer map for each installation entry
+      // Helper to get a localized field value (e.g., name, description)
+      const getLocalizedValue = (field, locale, fallbackLocale = 'en-US') => {
+        if (!field) return '';
+        // Prefer requested locale, then fallback, then check if field itself is the string
+        return field[locale] || field[fallbackLocale] || (typeof field === 'string' ? field : '');
+      };
+
+      // Helper to get the URL from a localized Asset field
+      const getAssetUrl = (assetField, locale, fallbackLocale = 'en-US') => {
+        // Get the Asset link itself based on locale preference
+        const assetLink = assetField?.[locale] || assetField?.[fallbackLocale] || assetField;
+        if (!assetLink?.fields?.file) return null; // No asset or no file field
+
+        // Get the file object based on locale preference
+        const fileData = assetLink.fields.file[locale] || assetLink.fields.file[fallbackLocale] || assetLink.fields.file;
+        return fileData?.url ? `https:${fileData.url}` : null; // Return URL or null
+      };
+
+      return items.map(item => {
         const fields = item.fields;
+        const currentLocale = this.language; // Use the component's current language (e.g., 'en' or 'fr')
+        const fallbackLocale = 'en-US'; // Contentful's default locale ID
 
-        // Helper to safely get localized field, returning the {en, fr} structure
-        const getLocalizedField = (field) => {
-          if (typeof field === 'object' && field !== null) {
-            // Handles object like { 'en-US': 'English', 'fr': 'French' }
-            return {
-              en: field['en-US'] || field['en'] || '', // Prioritize en-US, fallback to en
-              fr: field['fr'] || '',
-            };
-          } else if (typeof field === 'string') {
-            // Handles case where only one locale value is returned directly as a string
-            return { en: field, fr: '' }; // Assume default locale (en)
-          }
-          return { en: '', fr: '' }; // Default fallback
-        };
+        // Get the artists array for the current locale, fallback to en-US
+        const artistsArray = fields.artists?.[currentLocale] || fields.artists?.[fallbackLocale];
 
-        const transformed = { // Start building the transformed object for this installation
+        return {
           id: item.sys.id,
-          name: getLocalizedField(fields.name),
-          description: getLocalizedField(fields.description),
-          year: fields.year || '',
-          dimensions: fields.dimensions || '',
-          materials: getLocalizedField(fields.materials),
-          longitude: fields.coordinates?.lon || 0, // Access lon/lat from the resolved coordinates object
-          latitude: fields.coordinates?.lat || 0,
-          // Access the resolved linked asset's fields for the main image URL
-          image: fields.mainImage?.fields?.file?.url ? `https:${fields.mainImage.fields.file.url}` : '',
-          // Map through the array of resolved linked artist entries
-          artists: fields.artists ? fields.artists.map(artist => { // Inner map for each artist entry
-            const artistFields = artist.fields; // Access fields of the resolved artist entry
-            if (!artistFields) {
-                return null; // Safety check
-            }
-            return { // Build the transformed artist object
-              name: artistFields.name || '',
-              // Access the resolved linked asset's fields for the artist photo URL
-              photo: artistFields.photo?.fields?.file?.url ? `https:${artistFields.photo.fields.file.url}` : '',
-              school: artistFields.school || '',
-              // Location was likely set up as localized in Contentful model, use helper
-              location: getLocalizedField(artistFields.location),
-              website: artistFields.website || '...'
-            };
-          }).filter(artist => artist !== null) : [] // Filter out any nulls and ensure it's always an array
-        };
+          // We need the {en, fr} structure for the getText helper to work
+          name: {
+            en: getLocalizedValue(fields.name, 'en', fallbackLocale),
+            fr: getLocalizedValue(fields.name, 'fr', fallbackLocale)
+          },
+          description: {
+            en: getLocalizedValue(fields.description, 'en', fallbackLocale),
+            fr: getLocalizedValue(fields.description, 'fr', fallbackLocale)
+          },
+          year: getLocalizedValue(fields.year, currentLocale, fallbackLocale),
+          dimensions: getLocalizedValue(fields.dimensions, currentLocale, fallbackLocale),
+          materials: {
+            en: getLocalizedValue(fields.materials, 'en', fallbackLocale),
+            fr: getLocalizedValue(fields.materials, 'fr', fallbackLocale)
+          },
+          longitude: fields.coordinates?.[fallbackLocale]?.lon || 0,
+          latitude: fields.coordinates?.[fallbackLocale]?.lat || 0,
+          image: getAssetUrl(fields.mainImage, currentLocale, fallbackLocale),
+          // Process artists array
+          artists: Array.isArray(artistsArray) ? artistsArray.map(artist => {
+            const artistFields = artist.fields;
+            if (!artistFields) return null;
 
-        return transformed; // End of transformed installation object
+            // Get the location object {en, fr} which might itself be localized
+            const locationField = artistFields.location?.[currentLocale] || artistFields.location?.[fallbackLocale];
+
+            return {
+              name: getLocalizedValue(artistFields.name, currentLocale, fallbackLocale),
+              photo: getAssetUrl(artistFields.photo, currentLocale, fallbackLocale),
+              school: getLocalizedValue(artistFields.school, currentLocale, fallbackLocale),
+              location: { // Reconstruct the {en, fr} object for the template
+                  en: getLocalizedValue(locationField, 'en', fallbackLocale),
+                  fr: getLocalizedValue(locationField, 'fr', fallbackLocale)
+              },
+              website: getLocalizedValue(artistFields.website, currentLocale, fallbackLocale) || '...',
+              interviewAudioUrl: getAssetUrl(artistFields.interview, currentLocale, fallbackLocale)
+            };
+          }).filter(artist => artist !== null) : []
+        };
       });
     },
 
@@ -528,6 +571,36 @@ export default {
     
     goToSlide(index) {
       this.currentSlide = index;
+    },
+    
+    playInterview(audioUrl) {
+      const player = this.$refs.audioPlayer;
+      if (player) {
+        if (this.activeAudioUrl === audioUrl && this.isPlayerPlaying) {
+          player.pause();
+        } else {
+          player.src = audioUrl;
+          this.activeAudioUrl = audioUrl; // Set intent before playing
+          player.play().catch(error => console.error("Error playing audio:", error));
+        }
+      }
+    },
+    
+    onAudioPlay() {
+      this.isPlayerPlaying = true;
+      // Ensure activeAudioUrl is set if playback started by other means (e.g. direct player interaction)
+      if (this.$refs.audioPlayer) {
+        this.activeAudioUrl = this.$refs.audioPlayer.src;
+      }
+    },
+    
+    onAudioPause() {
+      this.isPlayerPlaying = false;
+    },
+    
+    onAudioEnded() {
+      this.isPlayerPlaying = false;
+      this.activeAudioUrl = null;
     },
     
     // Method to close the main popup and potentially clear hover state
@@ -842,11 +915,17 @@ export default {
   box-sizing: border-box;
 }
 
+.artist-image-wrapper {
+  position: relative; /* For positioning the play button */
+  display: inline-block; /* To wrap the image correctly */
+  margin-bottom: 20px; /* Keep the original space below the image area */
+}
+
 .artist-info-image {
   width: 285px; /* Specific width */
   height: 380px; /* Specific height */
   object-fit: cover;
-  margin-bottom: 20px; /* Space below image */
+  display: block; /* Ensure it behaves as a block for the wrapper */
 }
 
 .artist-info-text {
@@ -1102,5 +1181,28 @@ export default {
     padding: 10px 15px;
   }
 
+}
+
+.play-interview-button {
+  position: absolute;
+  bottom: 10px;  /* Position from bottom, inside the image */
+  right: 10px;   /* Position from right, inside the image */
+  background-color: #333; /* Match text color */
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: none; /* Removed box-shadow */
+  padding: 0; /* Remove padding to center SVG */
+}
+
+.play-interview-button svg {
+  width: 24px; /* Adjust icon size */
+  height: 24px;
 }
 </style> 
