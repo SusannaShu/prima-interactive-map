@@ -13,8 +13,11 @@ export default {
     BasicMap
   },
   data() {
+    // Detect browser language for initial setting
+    const browserLang = navigator.language || navigator.userLanguage; // Includes fallback
+    const initialLanguage = browserLang.toLowerCase().startsWith('fr') ? 'fr' : 'en';
     return {
-      language: 'en'
+      language: initialLanguage
     }
   },
   methods: {
