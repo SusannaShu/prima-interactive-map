@@ -718,13 +718,13 @@ export default {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
   padding: 30px;
   color: white; /* Restore white text for main overlay */
   text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: flex-start; /* Move text to top */
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%); /* Gradient from top */
 }
 
 .popup-overlay h3 {

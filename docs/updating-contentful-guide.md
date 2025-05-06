@@ -18,11 +18,11 @@ It's recommended to watch this video first for a visual guide.
 
 1.  Go to the Contentful login page: [https://app.contentful.com/](https://app.contentful.com/)
 2.  Log in using the provided email address and password.
-3.  If you belong to multiple organizations or spaces, ensure you select the correct space (e.g., "Prima Interactive Map").
+3.  If you belong to multiple organizations or spaces, ensure you select the correct space (e.g., "Prima Interactive Map"). (Or click to go to [https://app.contentful.com/spaces/9lr2p7f5uhit/home](https://app.contentful.com/spaces/9lr2p7f5uhit/home))
 
 ## 4. Understanding the Interface
 
-Once logged in, the main sections you'll use are:
+Once logged in and navigated to Spaces -> Prima Interactive Map, the main sections you'll use are:
 
 *   **Content:** This is where you'll find all the existing entries for Art Installations and Artists.
 *   **Media:** This is where all uploaded images (for installations and artists) are stored.
