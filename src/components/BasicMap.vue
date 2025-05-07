@@ -55,8 +55,20 @@
         </div>
       </div>
       
+      <!-- Slide (Conditional): Video -->
+      <div v-if="selectedLocation.videoUrl && currentSlide === 1" class="popup-slide video-slide">
+        <video 
+          ref="videoPlayer"
+          :src="selectedLocation.videoUrl" 
+          controls 
+          class="popup-video"
+          @play="handleVideoPlay"
+          @pause="handleVideoPause"
+        ></video>
+      </div>
+      
       <!-- Slide 2: Details with artwork info -->
-      <div v-if="currentSlide === 1" class="popup-slide details">
+      <div v-if="currentSlide === (selectedLocation.videoUrl ? 2 : 1)" class="popup-slide details">
         <div class="slide-container">
           <div class="slide-content">
             <div class="year" :data-year="selectedLocation.year">{{ getText(selectedLocation.name) }}</div>
@@ -70,7 +82,7 @@
       </div>
       
       <!-- Slides 3+: Artist info (one per artist) -->
-      <div v-if="currentSlide >= 2 && selectedLocation.artists && selectedLocation.artists.length > 0" class="popup-slide artist-info">
+      <div v-if="currentSlide >= (selectedLocation.videoUrl ? 3 : 2) && artistDetails" class="popup-slide artist-info">
         <div v-if="artistDetails" class="artist-container">
           <div class="artist-image-wrapper">
             <img 
@@ -132,9 +144,9 @@
     <audio 
       ref="audioPlayer" 
       style="display: none;" 
-      @play="onAudioPlay"
-      @pause="onAudioPause"
-      @ended="onAudioEnded"
+      @play="handleAudioPlay"
+      @pause="handleAudioPause"
+      @ended="handleAudioEnded"
     ></audio>
   </div>
 </template>
@@ -183,14 +195,27 @@ export default {
   computed: {
     totalSlides() {
       if (!this.selectedLocation) return 0;
+      let count = 1; // Main image slide
+      if (this.selectedLocation.videoUrl) {
+        count++; // Video slide
+      }
+      count++; // Details slide
       const artistCount = this.selectedLocation.artists ? this.selectedLocation.artists.length : 0;
-      return 2 + artistCount; // 2 base slides + 1 per artist
+      return count + artistCount;
     },
     artistDetails() {
-      if (!this.selectedLocation || !this.selectedLocation.artists || this.currentSlide < 2) {
-        return null;
+      if (!this.selectedLocation || !this.selectedLocation.artists) return null;
+      
+      // Calculate base index for artists (after image, optional video, and details)
+      let baseArtistSlideIndex = 1; // Starts after image slide (index 0)
+      if (this.selectedLocation.videoUrl) {
+        baseArtistSlideIndex++; // Add 1 for video slide
       }
-      const artistIndex = this.currentSlide - 2; // Artists start from slide index 2
+      baseArtistSlideIndex++; // Add 1 for details slide
+
+      if (this.currentSlide < baseArtistSlideIndex) return null; // Not yet on an artist slide
+
+      const artistIndex = this.currentSlide - baseArtistSlideIndex;
       return this.selectedLocation.artists[artistIndex] || null;
     }
   },
@@ -217,8 +242,6 @@ export default {
           content_type: 'artInstallation', // Use the Content Type ID from Contentful
           include: 2 // Include linked artists (depth 2 for artist fields)
         });
-
-        // console.log('Raw Contentful response items:', response.items); // Keep for debugging if needed
 
         // Transform Contentful data into the format the component expects
         this.artLocations = this.transformContentfulData(response.items);
@@ -289,6 +312,7 @@ export default {
           longitude: fields.coordinates?.[fallbackLocale]?.lon || 0,
           latitude: fields.coordinates?.[fallbackLocale]?.lat || 0,
           image: getAssetUrl(fields.mainImage, currentLocale, fallbackLocale),
+          videoUrl: getAssetUrl(fields.video, currentLocale, fallbackLocale),
           // Process artists array
           artists: Array.isArray(artistsArray) ? artistsArray.map(artist => {
             const artistFields = artist.fields;
@@ -586,19 +610,24 @@ export default {
       }
     },
     
-    onAudioPlay() {
+    handleAudioPlay() {
       this.isPlayerPlaying = true;
       // Ensure activeAudioUrl is set if playback started by other means (e.g. direct player interaction)
       if (this.$refs.audioPlayer) {
         this.activeAudioUrl = this.$refs.audioPlayer.src;
       }
+      // Pause video if audio starts playing
+      const videoPlayer = this.$refs.videoPlayer;
+      if (videoPlayer && !videoPlayer.paused) {
+        videoPlayer.pause();
+      }
     },
     
-    onAudioPause() {
+    handleAudioPause() {
       this.isPlayerPlaying = false;
     },
     
-    onAudioEnded() {
+    handleAudioEnded() {
       this.isPlayerPlaying = false;
       this.activeAudioUrl = null;
     },
@@ -606,11 +635,18 @@ export default {
     // Method to close the main popup and potentially clear hover state
     closeMainPopup() {
       this.selectedLocation = null;
-      // It might be good practice to ensure hover popup is gone, 
-      // though mouseleave should handle it.
       if (this.hoverPopup) {
         this.hoverPopup.remove();
         this.hoverPopup = null;
+      }
+      // Pause audio and video when popup closes
+      const audioPlayer = this.$refs.audioPlayer;
+      if (audioPlayer && !audioPlayer.paused) {
+        audioPlayer.pause();
+      }
+      const videoPlayer = this.$refs.videoPlayer;
+      if (videoPlayer && !videoPlayer.paused) {
+        videoPlayer.pause();
       }
     },
     
@@ -627,7 +663,21 @@ export default {
       if (lang === 'fr' || lang === 'en') {
         this.$emit('language-change', lang);
       }
-    }
+    },
+    
+    handleVideoPlay() {
+      // Pause audio if video starts playing
+      const audioPlayer = this.$refs.audioPlayer;
+      if (audioPlayer && !audioPlayer.paused) {
+        audioPlayer.pause();
+        this.isPlayerPlaying = false; // Reflect audio player state
+      }
+      // Add any other logic needed when video plays
+    },
+    
+    handleVideoPause() {
+      // Logic needed when video pauses (e.g., if you want to track its state)
+    },
   }
 };
 </script>
@@ -1204,5 +1254,20 @@ export default {
 .play-interview-button svg {
   width: 24px; /* Adjust icon size */
   height: 24px;
+}
+
+.popup-slide.video-slide {
+  background-color: #000; /* Black background for video player */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-video {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%; /* Ensure video tries to fill width */
+  height: 100%; /* Ensure video tries to fill height */
+  object-fit: cover; /* Fill the container, cropping if necessary */
 }
 </style> 
